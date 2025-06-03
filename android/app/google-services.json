@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "275749625644",
+    "project_id": "octavapp-75151",
+    "storage_bucket": "octavapp-75151.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:275749625644:android:0b21b5004ee2a133ea1689",
+        "android_client_info": {
+          "package_name": "com.example.octavapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBXVV_RXsMk9jR3xBN7rF1IgEfUReZ3b3g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
