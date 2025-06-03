@@ -79,7 +79,7 @@ class _HomePageState extends State<HomePage> {
             leading: Column(
               children: [
                 const SizedBox(height: 24),
-                const Icon(Icons.fire_truck, size: 32),
+                const Icon(Icons.home, size: 32),
                 if (widget.isAdmin) ...[
                   const SizedBox(height: 20),
                   const Tooltip(

@@ -21,19 +21,23 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isLoading = true);
 
     try {
+      final email = _emailController.text.trim().toLowerCase();
+
       await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
+        email: email,
         password: _passwordController.text.trim(),
       );
 
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('logueado', true);
-
-      final email = _emailController.text.trim().toLowerCase();
       final isAdmin = email == 'capitan8@cbt.cl' ||
                       email == 'director8@cbt.cl' ||
                       email.contains('admin');
 
+      // Guardar estado de sesión y rol en SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('logueado', true);
+      await prefs.setBool('esAdmin', isAdmin);
+
+      // Redirigir a home
       Navigator.pushReplacementNamed(
         context,
         '/home',

@@ -9,9 +9,11 @@ import 'pages/register.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+
   final prefs = await SharedPreferences.getInstance();
   final logueado = prefs.getBool('logueado') ?? false;
-  final isAdmin = prefs.getBool('isAdmin') ?? false;
+  final isAdmin = prefs.getBool('esAdmin') ?? false;
+
   runApp(InventarioApp(logueado: logueado, isAdmin: isAdmin));
 }
 
@@ -81,7 +83,7 @@ class _InventarioAppState extends State<InventarioApp> {
   Future<void> _handleLogout(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('logueado', false);
-    await prefs.setBool('isAdmin', false);
+    await prefs.setBool('esAdmin', false);
     Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
   }
 }
