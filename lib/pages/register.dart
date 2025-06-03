@@ -32,6 +32,7 @@ class _RegisterPageState extends State<RegisterPage> {
     final esValido = esAdmin || esCorreoValido(email);
 
     if (!esValido) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Correo no válido para registro")),
       );
@@ -56,6 +57,7 @@ class _RegisterPageState extends State<RegisterPage> {
         // si firestore falla, igual seguimos
       }
 
+      if (!mounted) return;
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -82,28 +84,30 @@ class _RegisterPageState extends State<RegisterPage> {
         mensaje = "Contraseña muy débil";
       }
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(mensaje)),
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error inesperado: ${e.toString()}")),
       );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF0EDED), // Fondo gris cálido, más suave y diferente
-   appBar: AppBar(
-  backgroundColor: const Color(0xFFD32F2F), // Rojo más fuerte
-  title: const Text('Crear cuenta', style: TextStyle(color: Colors.white)),
-  centerTitle: true,
-  iconTheme: const IconThemeData(color: Colors.white),
-),
+      backgroundColor: const Color(0xFFF0EDED),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFFD32F2F),
+        title: const Text('Crear cuenta', style: TextStyle(color: Colors.white)),
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(

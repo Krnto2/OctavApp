@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'b8.dart';
 import 'h8.dart';
 import 'f8.dart';
+import 'add.dart';
 
 class HomePage extends StatefulWidget {
   final Function(bool) onToggleTheme;
@@ -32,26 +33,39 @@ class _HomePageState extends State<HomePage> {
     _userEmail = FirebaseAuth.instance.currentUser?.email ?? 'usuario@cbt.cl';
   }
 
-  List<Widget> get _views => [
-        CarrosView(email: _userEmail, isDarkMode: widget.isDarkMode),
-        const Center(child: Text('Inventario')),
-        const Center(child: Text('Reportes')),
-        SettingsView(
-          isDarkMode: widget.isDarkMode,
-          onToggleTheme: widget.onToggleTheme,
-        ),
-        const Center(child: Text('Saliendo...')),
-      ];
+  List<Widget> get _views {
+  final views = [
+    CarrosView(email: _userEmail, isDarkMode: widget.isDarkMode),
+    const Center(child: Text('Inventario')),
+  ];
 
-  void _handleNavigation(int index) {
-    if (index == 4 && widget.onLogout != null) {
-      _confirmLogout(context);
-    } else {
-      setState(() {
-        _selectedIndex = index;
-      });
-    }
+  if (widget.isAdmin) {
+    views.add(const ReportesView());
   }
+
+  views.add(
+    SettingsView(
+      isDarkMode: widget.isDarkMode,
+      onToggleTheme: widget.onToggleTheme,
+    ),
+  );
+
+  views.add(const Center(child: Text('Saliendo...')));
+
+  return views;
+}
+
+ void _handleNavigation(int index) {
+  final isLogoutIndex = widget.isAdmin ? index == 4 : index == 3;
+
+  if (isLogoutIndex && widget.onLogout != null) {
+    _confirmLogout(context);
+  } else {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+}
 
   void _confirmLogout(BuildContext context) {
     showDialog(
@@ -103,28 +117,29 @@ class _HomePageState extends State<HomePage> {
                 ],
               ],
             ),
-            destinations: const [
-              NavigationRailDestination(
+            destinations: [
+              const NavigationRailDestination(
                 icon: Icon(Icons.fire_truck_outlined),
                 selectedIcon: Icon(Icons.fire_truck),
                 label: Text('Carros'),
               ),
-              NavigationRailDestination(
+              const NavigationRailDestination(
                 icon: Icon(Icons.inventory_2_outlined),
                 selectedIcon: Icon(Icons.inventory),
                 label: Text('Inventario'),
               ),
-              NavigationRailDestination(
-                icon: Icon(Icons.bar_chart_outlined),
-                selectedIcon: Icon(Icons.bar_chart),
-                label: Text('Reportes'),
-              ),
-              NavigationRailDestination(
+              if (widget.isAdmin)
+                const NavigationRailDestination(
+                  icon: Icon(Icons.bar_chart_outlined),
+                  selectedIcon: Icon(Icons.bar_chart),
+                  label: Text('Reportes'),
+                ),
+              const NavigationRailDestination(
                 icon: Icon(Icons.settings_outlined),
                 selectedIcon: Icon(Icons.settings),
                 label: Text('Config.'),
               ),
-              NavigationRailDestination(
+              const NavigationRailDestination(
                 icon: Icon(Icons.logout),
                 selectedIcon: Icon(Icons.logout),
                 label: Text('Salir'),
@@ -180,71 +195,110 @@ class CarrosView extends StatelessWidget {
     );
   }
 
-@override
-Widget build(BuildContext context) {
-  final nombre = getNombreDesdeCorreo(email);
-  final carros = [
-    {'nombre': 'B-8', 'imagen': 'assets/images/b8.png'},
-    {'nombre': 'H-8', 'imagen': 'assets/images/h8.png'},
-    {'nombre': 'F-8', 'imagen': 'assets/images/f8.png'},
-  ];
+  @override
+  Widget build(BuildContext context) {
+    final nombre = getNombreDesdeCorreo(email);
+    final carros = [
+      {'nombre': 'B-8', 'imagen': 'assets/images/b8.png'},
+      {'nombre': 'H-8', 'imagen': 'assets/images/h8.png'},
+      {'nombre': 'F-8', 'imagen': 'assets/images/f8.png'},
+    ];
 
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 65),
-        Text(
-          '¡Hola, $nombre!',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        const SizedBox(height: 0),
-        Expanded(
-          child: ListView.builder(
-            itemCount: carros.length,
-            itemBuilder: (context, index) {
-              final carro = carros[index];
-              return GestureDetector(
-                onTap: () => _navigateToCarro(context, carro['nombre']!),
-                child: Card(
-                  elevation: 4,
-                  margin: const EdgeInsets.only(bottom: 20),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    children: [
-                      ClipRRect(
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                        child: Image.asset(
-                          carro['imagen']!,
-                          height: 140,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Text(
-                          carro['nombre']!,
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ],
-                  ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 65),
+          Text(
+            '¡Hola, $nombre!',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
-              );
-            },
           ),
-        ),
-      ],
-    ),
-  );
+          const SizedBox(height: 0),
+          Expanded(
+            child: ListView.builder(
+              itemCount: carros.length,
+              itemBuilder: (context, index) {
+                final carro = carros[index];
+                return GestureDetector(
+                  onTap: () => _navigateToCarro(context, carro['nombre']!),
+                  child: Card(
+                    elevation: 4,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: [
+                        ClipRRect(
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                          child: Image.asset(
+                            carro['imagen']!,
+                            height: 140,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Text(
+                            carro['nombre']!,
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
+class ReportesView extends StatelessWidget {
+  const ReportesView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Reportes',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AddPage()),
+            ),
+            icon: const Icon(Icons.add),
+            label: const Text('Añadir ítems'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Expanded(
+            child: Center(
+              child: Text('Aquí aparecerán los reportes o funciones del administrador.'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class SettingsView extends StatelessWidget {

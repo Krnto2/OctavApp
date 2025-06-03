@@ -29,15 +29,14 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       final isAdmin = email == 'capitan8@cbt.cl' ||
-                      email == 'director8@cbt.cl' ||
-                      email.contains('admin');
+          email == 'director8@cbt.cl' ||
+          email.contains('admin');
 
-      // Guardar estado de sesión y rol en SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('logueado', true);
       await prefs.setBool('esAdmin', isAdmin);
 
-      // Redirigir a home
+      if (!mounted) return;
       Navigator.pushReplacementNamed(
         context,
         '/home',
@@ -51,26 +50,123 @@ class _LoginPageState extends State<LoginPage> {
         mensaje = "Contraseña incorrecta";
       }
 
+      if (!mounted) return;
       showDialog(
         context: context,
-        builder: (context) => AlertDialog(
+        builder: (ctx) => AlertDialog(
           title: const Text("Error"),
           content: Text(mensaje),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(ctx),
               child: const Text("Cerrar"),
             )
           ],
         ),
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error inesperado: ${e.toString()}")),
       );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
+  }
+
+  Future<void> _mostrarDialogoRecuperacion() async {
+    final emailResetController = TextEditingController();
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext outerCtx) {
+        return StatefulBuilder(
+          builder: (BuildContext ctx, setState) {
+            bool enviando = false;
+            String? mensajeError;
+
+            Future<void> enviarCorreo() async {
+              final email = emailResetController.text.trim();
+              if (email.isEmpty) {
+                setState(() {
+                  mensajeError = "Ingresa un correo válido.";
+                });
+                return;
+              }
+
+              setState(() {
+                enviando = true;
+                mensajeError = null;
+              });
+
+              try {
+               Navigator.pop(ctx); // Cerrar diálogo ANTES del await
+
+                    await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Se ha enviado un enlace a $email")),
+                    );
+
+
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Se ha enviado un enlace a $email")),
+                );
+              } on FirebaseAuthException catch (e) {
+                setState(() {
+                  mensajeError = e.code == 'user-not-found'
+                      ? "No se encontró una cuenta con ese correo"
+                      : "Error al enviar correo";
+                  enviando = false;
+                });
+              }
+            }
+
+            return AlertDialog(
+              title: const Text("Recuperar contraseña"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: emailResetController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      labelText: "Correo institucional",
+                      hintText: "tucorreo@cbt.cl",
+                    ),
+                  ),
+                  if (mensajeError != null) ...[
+                    const SizedBox(height: 8),
+                    Text(mensajeError!, style: const TextStyle(color: Colors.red)),
+                  ]
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text("Cancelar"),
+                ),
+                ElevatedButton(
+                  onPressed: enviando ? null : enviarCorreo,
+                  child: enviando
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text("Enviar"),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -80,10 +176,7 @@ class _LoginPageState extends State<LoginPage> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF4FC3F7),
         centerTitle: true,
-        title: const Text(
-          'Iniciar Sesión',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text('Iniciar Sesión', style: TextStyle(color: Colors.white)),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Center(
@@ -127,6 +220,13 @@ class _LoginPageState extends State<LoginPage> {
                         onPressed: _login,
                         child: const Text('Entrar', style: TextStyle(color: Colors.white)),
                       ),
+                TextButton(
+                  onPressed: _mostrarDialogoRecuperacion,
+                  child: const Text(
+                    '¿Olvidaste tu contraseña?',
+                    style: TextStyle(color: Colors.blue),
+                  ),
+                ),
                 TextButton(
                   onPressed: () {
                     Navigator.pushNamed(context, '/register');

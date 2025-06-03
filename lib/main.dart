@@ -81,10 +81,13 @@ class _InventarioAppState extends State<InventarioApp> {
     );
   }
 
-  Future<void> _handleLogout(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('logueado', false);
-    await prefs.setBool('esAdmin', false);
-    Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
-  }
+ Future<void> _handleLogout(BuildContext context) async {
+  final navigator = Navigator.of(context); 
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setBool('logueado', false);
+  await prefs.setBool('esAdmin', false);
+
+  navigator.pushNamedAndRemoveUntil('/login', (_) => false);
+}
+
 }
