@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'b8.dart';
 import 'h8.dart';
 import 'f8.dart';
@@ -23,9 +24,16 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
+  late String _userEmail;
+
+  @override
+  void initState() {
+    super.initState();
+    _userEmail = FirebaseAuth.instance.currentUser?.email ?? 'usuario@cbt.cl';
+  }
 
   List<Widget> get _views => [
-        const CarrosView(),
+        CarrosView(email: _userEmail, isDarkMode: widget.isDarkMode),
         const Center(child: Text('Inventario')),
         const Center(child: Text('Reportes')),
         SettingsView(
@@ -75,6 +83,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: widget.isDarkMode ? const Color(0xFF121212) : null,
       body: Row(
         children: [
           NavigationRail(
@@ -86,7 +95,7 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(height: 24),
                 const Icon(Icons.home, size: 32),
                 if (widget.isAdmin) ...[
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 10),
                   const Tooltip(
                     message: 'Modo Administrador',
                     child: Icon(Icons.security, color: Colors.red, size: 30),
@@ -133,7 +142,17 @@ class _HomePageState extends State<HomePage> {
 }
 
 class CarrosView extends StatelessWidget {
-  const CarrosView({super.key});
+  final String email;
+  final bool isDarkMode;
+  const CarrosView({super.key, required this.email, required this.isDarkMode});
+
+  String getNombreDesdeCorreo(String correo) {
+    final parte = correo.split('@').first;
+    final nombre = parte.split('.').first;
+    return nombre.isNotEmpty
+        ? nombre[0].toUpperCase() + nombre.substring(1)
+        : 'Bombero';
+  }
 
   void _navigateToCarro(BuildContext context, String nombreCarro) {
     Widget page;
@@ -161,55 +180,71 @@ class CarrosView extends StatelessWidget {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final carros = [
-      {'nombre': 'B-8', 'imagen': 'assets/images/b8.png'},
-      {'nombre': 'H-8', 'imagen': 'assets/images/h8.png'},
-      {'nombre': 'F-8', 'imagen': 'assets/images/f8.png'},
-    ];
+@override
+Widget build(BuildContext context) {
+  final nombre = getNombreDesdeCorreo(email);
+  final carros = [
+    {'nombre': 'B-8', 'imagen': 'assets/images/b8.png'},
+    {'nombre': 'H-8', 'imagen': 'assets/images/h8.png'},
+    {'nombre': 'F-8', 'imagen': 'assets/images/f8.png'},
+  ];
 
-    return Center(
-      child: SizedBox(
-        width: 600,
-        child: GridView.count(
-          shrinkWrap: true,
-          crossAxisCount: 1,
-          childAspectRatio: 2,
-          mainAxisSpacing: 20,
-          children: carros.map((carro) {
-            return GestureDetector(
-              onTap: () => _navigateToCarro(context, carro['nombre']!),
-              child: Card(
-                elevation: 4,
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: Image.asset(
-                        carro['imagen']!,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        carro['nombre']!,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 65),
+        Text(
+          '¡Hola, $nombre!',
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        const SizedBox(height: 0),
+        Expanded(
+          child: ListView.builder(
+            itemCount: carros.length,
+            itemBuilder: (context, index) {
+              final carro = carros[index];
+              return GestureDetector(
+                onTap: () => _navigateToCarro(context, carro['nombre']!),
+                child: Card(
+                  elevation: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      ClipRRect(
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                        child: Image.asset(
+                          carro['imagen']!,
+                          height: 140,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
                         ),
                       ),
-                    ),
-                  ],
+                      Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Text(
+                          carro['nombre']!,
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          }).toList(),
+              );
+            },
+          ),
         ),
-      ),
-    );
-  }
+      ],
+    ),
+  );
+}
+
 }
 
 class SettingsView extends StatelessWidget {
