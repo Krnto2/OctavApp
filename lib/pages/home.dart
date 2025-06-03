@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'b8.dart';
+import 'h8.dart';
+import 'f8.dart';
 
 class HomePage extends StatefulWidget {
   final Function(bool) onToggleTheme;
@@ -29,7 +32,7 @@ class _HomePageState extends State<HomePage> {
           isDarkMode: widget.isDarkMode,
           onToggleTheme: widget.onToggleTheme,
         ),
-        const Center(child: Text('Saliendo...')), // Placeholder
+        const Center(child: Text('Saliendo...')),
       ];
 
   void _handleNavigation(int index) {
@@ -55,12 +58,14 @@ class _HomePageState extends State<HomePage> {
           ),
           ElevatedButton.icon(
             onPressed: () {
-              Navigator.pop(context); // cerrar el diálogo
-              widget.onLogout!(context); // ejecutar logout
+              Navigator.pop(context);
+              widget.onLogout!(context);
             },
             icon: const Icon(Icons.logout),
             label: const Text('Cerrar sesión'),
-            style: ElevatedButton.styleFrom(backgroundColor: const Color.fromARGB(255, 238, 138, 130)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color.fromARGB(255, 238, 138, 130),
+            ),
           ),
         ],
       ),
@@ -127,18 +132,32 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// CarrosView, DetalleCarroPage, and SettingsView remain unchanged
-
-
 class CarrosView extends StatelessWidget {
   const CarrosView({super.key});
 
   void _navigateToCarro(BuildContext context, String nombreCarro) {
+    Widget page;
+
+    switch (nombreCarro) {
+      case 'B-8':
+        page = const B8Page();
+        break;
+      case 'H-8':
+        page = const H8Page();
+        break;
+      case 'F-8':
+        page = const F8Page();
+        break;
+      default:
+        page = Scaffold(
+          appBar: AppBar(title: const Text('Carro no encontrado')),
+          body: const Center(child: Text('No se encontró la página para este carro.')),
+        );
+    }
+
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => DetalleCarroPage(nombreCarro: nombreCarro),
-      ),
+      MaterialPageRoute(builder: (_) => page),
     );
   }
 
@@ -188,24 +207,6 @@ class CarrosView extends StatelessWidget {
             );
           }).toList(),
         ),
-      ),
-    );
-  }
-}
-
-class DetalleCarroPage extends StatelessWidget {
-  final String nombreCarro;
-
-  const DetalleCarroPage({super.key, required this.nombreCarro});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(nombreCarro),
-      ),
-      body: const Center(
-        child: Text('Secciones del carro aquí'),
       ),
     );
   }
