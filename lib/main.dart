@@ -6,6 +6,7 @@ import 'pages/home.dart';
 import 'pages/login.dart';
 import 'pages/register.dart';
 
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
