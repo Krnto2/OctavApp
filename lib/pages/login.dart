@@ -29,7 +29,16 @@ class _LoginPageState extends State<LoginPage> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('logueado', true);
 
-      Navigator.pushReplacementNamed(context, '/home');
+      final email = _emailController.text.trim().toLowerCase();
+      final isAdmin = email == 'capitan8@cbt.cl' ||
+                      email == 'director8@cbt.cl' ||
+                      email.contains('admin');
+
+      Navigator.pushReplacementNamed(
+        context,
+        '/home',
+        arguments: {'isAdmin': isAdmin},
+      );
     } on FirebaseAuthException catch (e) {
       String mensaje = "Error al iniciar sesión";
       if (e.code == 'user-not-found') {
@@ -63,10 +72,10 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F8FA), 
+      backgroundColor: const Color(0xFFF2F8FA),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF4FC3F7), 
-        centerTitle: true, 
+        backgroundColor: const Color(0xFF4FC3F7),
+        centerTitle: true,
         title: const Text(
           'Iniciar Sesión',
           style: TextStyle(color: Colors.white),
@@ -114,15 +123,15 @@ class _LoginPageState extends State<LoginPage> {
                         onPressed: _login,
                         child: const Text('Entrar', style: TextStyle(color: Colors.white)),
                       ),
-               TextButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/register');
-                    },
-                    child: const Text(
-                      '¿No tienes cuenta? Regístrate',
-                      style: TextStyle(color: Colors.black), 
-                    ),
-),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/register');
+                  },
+                  child: const Text(
+                    '¿No tienes cuenta? Regístrate',
+                    style: TextStyle(color: Colors.black),
+                  ),
+                ),
               ],
             ),
           ),

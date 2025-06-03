@@ -3,11 +3,15 @@ import 'package:flutter/material.dart';
 class HomePage extends StatefulWidget {
   final Function(bool) onToggleTheme;
   final bool isDarkMode;
+  final bool isAdmin;
+  final void Function(BuildContext)? onLogout;
 
   const HomePage({
     super.key,
     required this.onToggleTheme,
     required this.isDarkMode,
+    required this.isAdmin,
+    this.onLogout,
   });
 
   @override
@@ -25,7 +29,43 @@ class _HomePageState extends State<HomePage> {
           isDarkMode: widget.isDarkMode,
           onToggleTheme: widget.onToggleTheme,
         ),
+        const Center(child: Text('Saliendo...')), // Placeholder
       ];
+
+  void _handleNavigation(int index) {
+    if (index == 4 && widget.onLogout != null) {
+      _confirmLogout(context);
+    } else {
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
+  }
+
+  void _confirmLogout(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('¿Cerrar sesión?'),
+        content: const Text('¿Estás seguro de que deseas cerrar sesión?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(context); // cerrar el diálogo
+              widget.onLogout!(context); // ejecutar logout
+            },
+            icon: const Icon(Icons.logout),
+            label: const Text('Cerrar sesión'),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color.fromARGB(255, 238, 138, 130)),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,15 +74,20 @@ class _HomePageState extends State<HomePage> {
         children: [
           NavigationRail(
             selectedIndex: _selectedIndex,
-            onDestinationSelected: (int index) {
-              setState(() {
-                _selectedIndex = index;
-              });
-            },
+            onDestinationSelected: _handleNavigation,
             labelType: NavigationRailLabelType.selected,
-            leading: const Padding(
-              padding: EdgeInsets.only(top: 24.0),
-              child: Icon(Icons.fire_truck, size: 32),
+            leading: Column(
+              children: [
+                const SizedBox(height: 24),
+                const Icon(Icons.fire_truck, size: 32),
+                if (widget.isAdmin) ...[
+                  const SizedBox(height: 20),
+                  const Tooltip(
+                    message: 'Modo Administrador',
+                    child: Icon(Icons.security, color: Colors.red, size: 30),
+                  ),
+                ],
+              ],
             ),
             destinations: const [
               NavigationRailDestination(
@@ -65,6 +110,11 @@ class _HomePageState extends State<HomePage> {
                 selectedIcon: Icon(Icons.settings),
                 label: Text('Config.'),
               ),
+              NavigationRailDestination(
+                icon: Icon(Icons.logout),
+                selectedIcon: Icon(Icons.logout),
+                label: Text('Salir'),
+              ),
             ],
           ),
           const VerticalDivider(thickness: 1, width: 1),
@@ -76,6 +126,9 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
+
+// CarrosView, DetalleCarroPage, and SettingsView remain unchanged
+
 
 class CarrosView extends StatelessWidget {
   const CarrosView({super.key});

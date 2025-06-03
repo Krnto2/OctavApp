@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'pages/home.dart';
 import 'pages/login.dart';
@@ -7,12 +8,22 @@ import 'pages/register.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(); 
-  runApp(const InventarioApp());
+  await Firebase.initializeApp();
+  final prefs = await SharedPreferences.getInstance();
+  final logueado = prefs.getBool('logueado') ?? false;
+  final isAdmin = prefs.getBool('isAdmin') ?? false;
+  runApp(InventarioApp(logueado: logueado, isAdmin: isAdmin));
 }
 
 class InventarioApp extends StatefulWidget {
-  const InventarioApp({super.key});
+  final bool logueado;
+  final bool isAdmin;
+
+  const InventarioApp({
+    super.key,
+    required this.logueado,
+    required this.isAdmin,
+  });
 
   @override
   State<InventarioApp> createState() => _InventarioAppState();
@@ -39,15 +50,38 @@ class _InventarioAppState extends State<InventarioApp> {
         ),
         useMaterial3: true,
       ),
-      initialRoute: '/login',
-      routes: {
-        '/login': (context) =>  LoginPage(),
-        '/register': (context) => const RegisterPage(),
-        '/home': (context) => HomePage(
+      initialRoute: widget.logueado ? '/home' : '/login',
+      onGenerateRoute: (settings) {
+        if (settings.name == '/home') {
+          final args = settings.arguments as Map<String, dynamic>? ?? {};
+          final isAdmin = args['isAdmin'] ?? widget.isAdmin;
+
+          return MaterialPageRoute(
+            builder: (_) => HomePage(
               isDarkMode: _isDarkMode,
               onToggleTheme: _toggleTheme,
+              isAdmin: isAdmin,
+              onLogout: _handleLogout,
             ),
+          );
+        }
+
+        switch (settings.name) {
+          case '/login':
+            return MaterialPageRoute(builder: (_) => const LoginPage());
+          case '/register':
+            return MaterialPageRoute(builder: (_) => const RegisterPage());
+          default:
+            return null;
+        }
       },
     );
+  }
+
+  Future<void> _handleLogout(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('logueado', false);
+    await prefs.setBool('isAdmin', false);
+    Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
   }
 }
