@@ -20,7 +20,7 @@ class _InventarioViewState extends State<InventarioView> {
   final tiposConSubtipos = {
     "Material de Agua": ["Piton", "Copla", "Manguera", "Otro"],
     "Herramienta": ["Manual", "Combustión", "Eléctrica", "Otro"],
-    "EPP": ["Arnés", "Máscara", "Botella", "Otro"],
+    "EPP": ["Máscara", "Botella", "Otro"],
   };
 
   final tiposSinSubtipos = [
@@ -39,6 +39,9 @@ class _InventarioViewState extends State<InventarioView> {
   final zonasH8 = ["Cajonera 1", "Cajonera 2", "Cajonera 3", "Cajonera 4", "Cajonera 5", "Cajonera 6", "Cajonera 7", "Techo", "Cabina"];
   final zonasF8 = ["Cajonera 1", "Cajonera 2", "Techo", "Cabina", "Atrás"];
 
+  File? nuevaImagen;
+  File? nuevoPDF;
+
   List<String> getZonasPorUbicacion(String? ubicacion) {
     switch (ubicacion) {
       case "B-8":
@@ -51,9 +54,6 @@ class _InventarioViewState extends State<InventarioView> {
         return [];
     }
   }
-
-  File? nuevaImagen;
-  File? nuevoPDF;
 
   Future<void> _pickImage(bool fromCamera) async {
     final picked = await ImagePicker().pickImage(
@@ -76,7 +76,7 @@ class _InventarioViewState extends State<InventarioView> {
           }
 
           if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return Center(child: Text('Error: \${snapshot.error}'));
           }
 
           final items = snapshot.data?.docs ?? [];
@@ -141,241 +141,245 @@ class _InventarioViewState extends State<InventarioView> {
     );
   }
 
- void _abrirDialogoEditar(BuildContext context, Map<String, dynamic> data, String docId) {
-  final nombreCtrl = TextEditingController(text: data['nombre']);
-  final cbtCtrl = TextEditingController(text: data['codigo_cbt']);
-  final descCtrl = TextEditingController(text: data['descripcion']);
+  void _abrirDialogoEditar(BuildContext context, Map<String, dynamic> data, String docId) {
+    final nombreCtrl = TextEditingController(text: data['nombre']);
+    final cbtCtrl = TextEditingController(text: data['codigo_cbt']);
+    final descCtrl = TextEditingController(text: data['descripcion']);
 
-  // Normalizar valores
-  String? tipoRaw = data['tipo'];
-  String? subtipoRaw = data['subtipo'];
+    String? tipoRaw = data['tipo'];
+    String? subtipoRaw = data['subtipo'];
 
-  final todosLosTipos = [...tiposConSubtipos.keys, ...tiposSinSubtipos];
-  final tipo = todosLosTipos.firstWhere(
-    (t) => t.toLowerCase() == (tipoRaw?.toLowerCase() ?? ''),
-    orElse: () => '',
-  );
-  final bool tipoValido = todosLosTipos.contains(tipo);
-  final tipoFinal = tipoValido ? tipo : null;
+    final todosLosTipos = [...tiposConSubtipos.keys, ...tiposSinSubtipos];
+    String? tipoFinal = todosLosTipos.firstWhere(
+      (t) => t.toLowerCase() == (tipoRaw?.toLowerCase() ?? ''),
+      orElse: () => '',
+    );
+    tipoFinal = todosLosTipos.contains(tipoFinal) ? tipoFinal : null;
 
-  List<String> subtiposDisponibles = tipoFinal != null && tiposConSubtipos.containsKey(tipoFinal)
-      ? tiposConSubtipos[tipoFinal]!
-      : [];
+    List<String> subtiposDisponibles = tipoFinal != null && tiposConSubtipos.containsKey(tipoFinal)
+        ? tiposConSubtipos[tipoFinal]!
+        : [];
 
-  final subtipo = subtiposDisponibles.firstWhere(
-    (s) => s.toLowerCase() == (subtipoRaw?.toLowerCase() ?? ''),
-    orElse: () => '',
-  );
-  final subtipoFinal = subtiposDisponibles.contains(subtipo) ? subtipo : null;
+    String? subtipoFinal = subtiposDisponibles.firstWhere(
+      (s) => s.toLowerCase() == (subtipoRaw?.toLowerCase() ?? ''),
+      orElse: () => '',
+    );
+    subtipoFinal = subtiposDisponibles.contains(subtipoFinal) ? subtipoFinal : null;
 
-  String? estado = estadosDisponibles.firstWhere(
-    (e) => e.toLowerCase() == (data['estado']?.toString().toLowerCase() ?? ''),
-    orElse: () => '',
-  );
-  if (!estadosDisponibles.contains(estado)) estado = null;
+    String? estado = estadosDisponibles.firstWhere(
+      (e) => e.toLowerCase() == (data['estado']?.toString().toLowerCase() ?? ''),
+      orElse: () => '',
+    );
+    if (!estadosDisponibles.contains(estado)) estado = null;
 
-  String? ubicacion = ubicacionesDisponibles.firstWhere(
-    (u) => u.toLowerCase() == (data['ubicacion']?.toString().toLowerCase() ?? ''),
-    orElse: () => '',
-  );
-  if (!ubicacionesDisponibles.contains(ubicacion)) ubicacion = null;
+    String? ubicacion = ubicacionesDisponibles.firstWhere(
+      (u) => u.toLowerCase() == (data['ubicacion']?.toString().toLowerCase() ?? ''),
+      orElse: () => '',
+    );
+    if (!ubicacionesDisponibles.contains(ubicacion)) ubicacion = null;
 
-  String? zona = data['zona'];
+    String? zona = data['zona'];
 
-  showDialog(
-    context: context,
-    builder: (_) => AlertDialog(
-      title: const Text('Editar ítem'),
-      content: SingleChildScrollView(
-        child: Column(
-          children: [
-            TextFormField(controller: nombreCtrl, decoration: const InputDecoration(labelText: 'Nombre')),
-            TextFormField(controller: cbtCtrl, decoration: const InputDecoration(labelText: 'Código CBT')),
-            TextFormField(controller: descCtrl, decoration: const InputDecoration(labelText: 'Descripción')),
+    showDialog(
+      context: context,
+      builder: (_) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Editar ítem'),
+            content: SingleChildScrollView(
+              child: Column(
+                children: [
+                  TextFormField(controller: nombreCtrl, decoration: const InputDecoration(labelText: 'Nombre')),
+                  TextFormField(controller: cbtCtrl, decoration: const InputDecoration(labelText: 'Código CBT')),
+                  TextFormField(controller: descCtrl, decoration: const InputDecoration(labelText: 'Descripción')),
 
-            DropdownButtonFormField<String>(
-              value: tipoFinal,
-              decoration: const InputDecoration(labelText: 'Tipo'),
-              items: todosLosTipos
-                  .map((t) => DropdownMenuItem(value: t, child: Text(t)))
-                  .toList(),
-              onChanged: (val) {
-                setState(() {
-                  data['tipo'] = val;
-                  data['subtipo'] = null;
-                });
-              },
-            ),
-
-            if (tipoFinal != null && tiposConSubtipos.containsKey(tipoFinal))
-              DropdownButtonFormField<String>(
-                value: subtipoFinal,
-                decoration: const InputDecoration(labelText: 'Subtipo'),
-                items: subtiposDisponibles
-                    .map((s) => DropdownMenuItem(value: s, child: Text(s)))
-                    .toList(),
-                onChanged: (val) => setState(() => data['subtipo'] = val),
-              ),
-
-            DropdownButtonFormField<String>(
-              value: estado,
-              items: estadosDisponibles
-                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                  .toList(),
-              onChanged: (val) => estado = val,
-              decoration: const InputDecoration(labelText: 'Estado'),
-            ),
-
-            DropdownButtonFormField<String>(
-  value: ubicacion,
-  items: ubicacionesDisponibles
-      .map((u) => DropdownMenuItem(value: u, child: Text(u)))
-      .toList(),
-  onChanged: (val) {
-    setState(() {
-      ubicacion = val;
-      zona = null; // limpiar zona siempre al cambiar ubicación
-    });
-  },
-  decoration: const InputDecoration(labelText: 'Ubicación'),
-),
-
-if (ubicacion != null && ubicacion != 'Bodega')
-  DropdownButtonFormField<String>(
-    value: getZonasPorUbicacion(ubicacion).contains(zona) ? zona : null,
-    decoration: const InputDecoration(labelText: 'Zona'),
-    items: getZonasPorUbicacion(ubicacion)
-        .map((z) => DropdownMenuItem(value: z, child: Text(z)))
-        .toList(),
-    onChanged: (val) => setState(() => zona = val),
-  ),
-
-
-            const SizedBox(height: 10),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () => _pickImage(true),
-                  icon: const Icon(Icons.camera_alt),
-                  label: const Text("Cámara"),
-                ),
-                const SizedBox(width: 10),
-                ElevatedButton.icon(
-                  onPressed: () => _pickImage(false),
-                  icon: const Icon(Icons.photo),
-                  label: const Text("Galería"),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 10),
-
-            ElevatedButton.icon(
-              icon: const Icon(Icons.picture_as_pdf),
-              label: const Text('Subir PDF'),
-              onPressed: () async {
-                final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
-                if (result != null && result.files.single.path != null) {
-                  setState(() => nuevoPDF = File(result.files.single.path!));
-                }
-              },
-            ),
-          ],
-        ),
-      ),
-      actionsAlignment: MainAxisAlignment.center,
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
-
-        ElevatedButton.icon(
-          icon: const Icon(Icons.delete),
-          label: const Text('Eliminar ítem'),
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (_) => AlertDialog(
-                title: const Text('¿Eliminar ítem?'),
-                content: const Text('¿Estás seguro de que deseas eliminar este ítem? Esta acción no se puede deshacer.'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Cancelar'),
+                  DropdownButtonFormField<String>(
+                    value: tipoFinal,
+                    decoration: const InputDecoration(labelText: 'Tipo'),
+                    items: todosLosTipos.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+                    onChanged: (val) {
+                      setState(() {
+                        tipoFinal = val;
+                        subtiposDisponibles = tiposConSubtipos[val] ?? [];
+                        subtipoFinal = null;
+                      });
+                    },
                   ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+
+                  if (tipoFinal != null && tiposConSubtipos.containsKey(tipoFinal))
+                    DropdownButtonFormField<String>(
+                      value: subtipoFinal,
+                      decoration: const InputDecoration(labelText: 'Subtipo'),
+                      items: subtiposDisponibles.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                      onChanged: (val) => setState(() => subtipoFinal = val),
+                    ),
+
+                  DropdownButtonFormField<String>(
+                    value: estado,
+                    decoration: const InputDecoration(labelText: 'Estado'),
+                    items: estadosDisponibles.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                    onChanged: (val) => setState(() => estado = val),
+                  ),
+
+                  DropdownButtonFormField<String>(
+                    value: ubicacion,
+                    decoration: const InputDecoration(labelText: 'Ubicación'),
+                    items: ubicacionesDisponibles.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
+                    onChanged: (val) => setState(() {
+                      ubicacion = val;
+                      zona = null;
+                    }),
+                  ),
+
+                  if (ubicacion != null && ubicacion != 'Bodega')
+                    DropdownButtonFormField<String>(
+                      value: getZonasPorUbicacion(ubicacion).contains(zona) ? zona : null,
+                      decoration: const InputDecoration(labelText: 'Zona'),
+                      items: getZonasPorUbicacion(ubicacion).map((z) => DropdownMenuItem(value: z, child: Text(z))).toList(),
+                      onChanged: (val) => setState(() => zona = val),
+                    ),
+
+                  const SizedBox(height: 10),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: () => _pickImage(true),
+                        icon: const Icon(Icons.camera_alt),
+                        label: const Text("Cámara"),
+                      ),
+                      const SizedBox(width: 10),
+                      ElevatedButton.icon(
+                        onPressed: () => _pickImage(false),
+                        icon: const Icon(Icons.photo),
+                        label: const Text("Galería"),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.picture_as_pdf),
+                    label: const Text('Subir PDF'),
                     onPressed: () async {
-                      Navigator.pop(context); // confirmación
-                      Navigator.pop(context); // editor
-                      await FirebaseFirestore.instance.collection('items').doc(docId).delete();
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Ítem eliminado correctamente')),
-                        );
+                      final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
+                      if (result != null && result.files.single.path != null) {
+                        setState(() => nuevoPDF = File(result.files.single.path!));
                       }
                     },
-                    child: const Text('Sí, eliminar'),
                   ),
                 ],
               ),
-            );
-          },
-        ),
-
-        ElevatedButton(
-          child: const Text('Guardar'),
-          onPressed: () async {
-            final codigoCBT = cbtCtrl.text.trim().toUpperCase();
-
-            if (codigoCBT.isNotEmpty) {
-              final duplicado = await FirebaseFirestore.instance
-                  .collection('items')
-                  .where('codigo_cbt', isEqualTo: codigoCBT)
-                  .limit(1)
-                  .get();
-
-              if (duplicado.docs.isNotEmpty && duplicado.docs.first.id != docId) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Ya existe un ítem con ese código CBT')),
+            ),
+            actionsAlignment: MainAxisAlignment.center,
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.delete),
+                label: const Text('Eliminar ítem'),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      title: const Text('¿Eliminar ítem?'),
+                      content: const Text('¿Estás seguro de que deseas eliminar este ítem? Esta acción no se puede deshacer.'),
+                      actions: [
+                        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+                          onPressed: () async {
+                            Navigator.pop(context);
+                            Navigator.pop(context);
+                            await FirebaseFirestore.instance.collection('items').doc(docId).delete();
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Ítem eliminado correctamente')),
+                              );
+                            }
+                          },
+                          child: const Text('Sí, eliminar'),
+                        ),
+                      ],
+                    ),
                   );
-                }
-                return;
-              }
-            }
+                },
+              ),
+              ElevatedButton(
+                child: const Text('Guardar'),
+                onPressed: () async {
+                  final codigoCBT = cbtCtrl.text.trim().toUpperCase();
 
-            final updates = {
-              'nombre': nombreCtrl.text.trim().toUpperCase(),
-              'codigo_cbt': codigoCBT,
-              'descripcion': descCtrl.text.trim(),
-              'estado': estado,
-              'ubicacion': ubicacion,
-              'zona': zona,
-              'tipo': tipoFinal,
-              'subtipo': subtipoFinal,
-            };
+                  if (nombreCtrl.text.trim().isEmpty || tipoFinal == null || estado == null || ubicacion == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Por favor completa todos los campos obligatorios')),
+                    );
+                    return;
+                  }
 
-            final bytes = await nuevaImagen?.readAsBytes();
-            if (bytes != null) {
-              updates['imagen_base64'] = base64Encode(bytes);
-            }
+                  if (tiposConSubtipos.containsKey(tipoFinal) && (subtipoFinal?.isEmpty ?? true)) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Selecciona un subtipo')),
+                    );
+                    return;
+                  }
 
-            if (nuevoPDF != null) {
-              final pdfName = '${DateTime.now().millisecondsSinceEpoch}.pdf';
-              final ref = FirebaseStorage.instance.ref().child('manuales/$pdfName');
-              await ref.putFile(nuevoPDF!);
-              final pdfUrl = await ref.getDownloadURL();
-              updates['manual_pdf_url'] = pdfUrl;
-            }
+                  if (ubicacion != 'Bodega' && (zona?.isEmpty ?? true)) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Selecciona una zona del carro')),
+                    );
+                    return;
+                  }
 
-            await FirebaseFirestore.instance.collection('items').doc(docId).update(updates);
-            if (context.mounted) Navigator.pop(context);
-          },
-        ),
-      ],
-    ),
-  );
-}
+                  final duplicado = await FirebaseFirestore.instance
+                      .collection('items')
+                      .where('codigo_cbt', isEqualTo: codigoCBT)
+                      .limit(1)
+                      .get();
+
+                  if (duplicado.docs.isNotEmpty && duplicado.docs.first.id != docId) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Ya existe un ítem con ese código CBT')),
+                      );
+                    }
+                    return;
+                  }
+
+                  final updates = {
+                    'nombre': nombreCtrl.text.trim().toUpperCase(),
+                    'codigo_cbt': codigoCBT,
+                    'descripcion': descCtrl.text.trim(),
+                    'estado': estado,
+                    'ubicacion': ubicacion,
+                    'zona': ubicacion == 'Bodega' ? null : zona,
+                    'tipo': tipoFinal,
+                    'subtipo': tiposConSubtipos.containsKey(tipoFinal) ? subtipoFinal : null,
+                  };
+
+                  final bytes = await nuevaImagen?.readAsBytes();
+                  if (bytes != null) {
+                    updates['imagen_base64'] = base64Encode(bytes);
+                  }
+
+                  if (nuevoPDF != null) {
+                    final pdfName = '${DateTime.now().millisecondsSinceEpoch}.pdf';
+                    final ref = FirebaseStorage.instance.ref().child('manuales/$pdfName');
+                    await ref.putFile(nuevoPDF!);
+                    final pdfUrl = await ref.getDownloadURL();
+                    updates['manual_pdf_url'] = pdfUrl;
+                  }
+
+                  await FirebaseFirestore.instance.collection('items').doc(docId).update(updates);
+                  if (context.mounted) Navigator.pop(context);
+                },
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 }
