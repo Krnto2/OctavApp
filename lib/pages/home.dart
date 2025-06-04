@@ -4,6 +4,7 @@ import 'b8.dart';
 import 'h8.dart';
 import 'f8.dart';
 import 'add.dart';
+import 'inventario.dart';
 
 class HomePage extends StatefulWidget {
   final Function(bool) onToggleTheme;
@@ -33,10 +34,10 @@ class _HomePageState extends State<HomePage> {
     _userEmail = FirebaseAuth.instance.currentUser?.email ?? 'usuario@cbt.cl';
   }
 
-  List<Widget> get _views {
+ List<Widget> get _views {
   final views = [
     CarrosView(email: _userEmail, isDarkMode: widget.isDarkMode),
-    const Center(child: Text('Inventario')),
+    const InventarioView(), // 👈 aquí se reemplaza el Center por la vista real
   ];
 
   if (widget.isAdmin) {

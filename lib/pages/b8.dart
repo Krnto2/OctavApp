@@ -41,7 +41,7 @@ class B8Page extends StatelessWidget {
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(4),
-                    // color: Colors.red.withOpacity(0.3), // Para debug visual
+                    // color: const Color.fromARGB(255, 85, 119, 233).withOpacity(0.3), // Para debug visual
                   ),
                 ),
               ),
