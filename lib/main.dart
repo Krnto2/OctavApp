@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_app_check/firebase_app_check.dart'; // 🔹 AÑADIDO
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'pages/home.dart';
 import 'pages/login.dart';
 import 'pages/register.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+
+  // 🔐 ACTIVAR App Check en modo debug (soluciona el error de reCAPTCHA vacío)
+  await FirebaseAppCheck.instance.activate(
+    androidProvider: AndroidProvider.debug,
+    appleProvider: AppleProvider.debug,
+  );
 
   final prefs = await SharedPreferences.getInstance();
   final logueado = prefs.getBool('logueado') ?? false;
@@ -81,13 +87,12 @@ class _InventarioAppState extends State<InventarioApp> {
     );
   }
 
- Future<void> _handleLogout(BuildContext context) async {
-  final navigator = Navigator.of(context); 
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setBool('logueado', false);
-  await prefs.setBool('esAdmin', false);
+  Future<void> _handleLogout(BuildContext context) async {
+    final navigator = Navigator.of(context);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('logueado', false);
+    await prefs.setBool('esAdmin', false);
 
-  navigator.pushNamedAndRemoveUntil('/login', (_) => false);
-}
-
+    navigator.pushNamedAndRemoveUntil('/login', (_) => false);
+  }
 }
