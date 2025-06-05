@@ -94,15 +94,16 @@ class _AddPageState extends State<AddPage> {
   Future<void> _subirItem() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final codigoCBT = _codigoController.text.trim().toUpperCase(); // <- este sí conviene en mayúsculas
-    final nombre = _nombreController.text.trim().toUpperCase();   // <- también recomendado en mayúsculas
-    final tipo = tipoSeleccionado;                                // se guarda tal como lo selecciona el usuario
-    final subtipo = subtipoSeleccionado;                          // sin toUpperCase()
-    final estado = estadoSeleccionado;                            // sin toUpperCase()
-    final ubicacion = ubicacionSeleccionada;                      // sin toUpperCase()
-    final zona = (ubicacionSeleccionada != 'Bodega') ? zonaEspecifica : null; // sin toUpperCase()
-    final descripcion = _descripcionController.text.trim();       // ya correcto
-    final userEmail = FirebaseAuth.instance.currentUser?.email ?? "desconocido@cbt.cl";
+    final codigoCBT = _codigoController.text.trim();
+final nombre = _nombreController.text.trim();
+final tipo = tipoSeleccionado;
+final subtipo = subtipoSeleccionado;
+final estado = estadoSeleccionado;
+final ubicacion = ubicacionSeleccionada;
+final zona = (ubicacionSeleccionada != 'Bodega') ? zonaEspecifica : null;
+final descripcion = _descripcionController.text.trim();
+final userEmail = FirebaseAuth.instance.currentUser?.email ?? "desconocido@cbt.cl";
+
 
 
     try {
