@@ -15,7 +15,7 @@ class VerPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final zona = cajoneraNombre.toUpperCase();
+    final zona = cajoneraNombre[0].toUpperCase() + cajoneraNombre.substring(1).toLowerCase();
 
     return Scaffold(
       appBar: AppBar(title: Text('Contenido: $zona')),
@@ -32,7 +32,7 @@ class VerPage extends StatelessWidget {
             }
 
             if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
+              return Center(child: Text('Error: \${snapshot.error}'));
             }
 
             final docs = snapshot.data?.docs ?? [];
@@ -80,45 +80,40 @@ class VerPage extends StatelessWidget {
                                 children: [
                                   Text(
                                     nombre,
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20,  color: Colors.black,),
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.black),
                                     textAlign: TextAlign.center,
                                   ),
                                   const SizedBox(height: 10),
                                   if (base64Image != null)
-                                        Padding(
-                                          padding: const EdgeInsets.only(bottom: 12),
-                                          child: Container(
-                                            width: 200, 
-                                            height: 200, 
-                                            decoration: BoxDecoration(
-                                              color: Colors.grey[200],
-                                              borderRadius: BorderRadius.circular(12),
-                                              border: Border.all(color: Colors.black26, width: 1),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.black12,
-                                                  blurRadius: 6,
-                                                  offset: Offset(0, 3),
-                                                ),
-                                              ],
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 12),
+                                      child: Container(
+                                        width: 200,
+                                        height: 200,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey[200],
+                                          borderRadius: BorderRadius.circular(12),
+                                          border: Border.all(color: Colors.black26, width: 1),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black12,
+                                              blurRadius: 6,
+                                              offset: Offset(0, 3),
                                             ),
-                                            child: ClipRRect(
-                                              borderRadius: BorderRadius.circular(12),
-                                              child: Image.memory(
-                                                base64Decode(base64Image),
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
+                                          ],
+                                        ),
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(12),
+                                          child: Image.memory(
+                                            base64Decode(base64Image),
+                                            fit: BoxFit.cover,
                                           ),
                                         ),
-
-
+                                      ),
+                                    ),
                                   _buildInfoText("Tipo", data['tipo']),
                                   _buildInfoText("Subtipo", data['subtipo']),
-                                  _buildInfoText("Código CBT", data['codigo_cbt']),
-                                  _buildInfoText("Estado", data['estado']),
-                                  _buildInfoText("Ubicación", data['ubicacion']),
-                                  _buildInfoText("Zona", data['zona']),
+                                  _buildInfoText("Código CBT", data['codigo_cbt']), 
                                   _buildInfoText("Descripción", data['descripcion']),
                                   const SizedBox(height: 12),
                                   if (data['manual_pdf_url'] != null)
@@ -171,13 +166,11 @@ class VerPage extends StatelessWidget {
       child: Text.rich(
         TextSpan(
           text: "$label: ",
-          style: const TextStyle(fontWeight: FontWeight.bold      ,  color: Colors.black, 
-) ,
+          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
           children: [
             TextSpan(
               text: value.toString(),
-              style: const TextStyle(fontWeight: FontWeight.normal,    color: Colors.black, 
-),
+              style: const TextStyle(fontWeight: FontWeight.normal, color: Colors.black),
             ),
           ],
         ),

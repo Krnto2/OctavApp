@@ -127,6 +127,15 @@ class _InventarioViewState extends State<InventarioView> {
               onBusquedaChanged: (_) => setState(() {}),
               controller: _searchController,
               getZonasPorUbicacion: getZonasPorUbicacion,
+              onLimpiarFiltros: () {
+                setState(() {
+                  filtroUbicacion = null;
+                  filtroZona = null;
+                  filtroTipo = null;
+                  filtroSubtipo = null;
+                  _searchController.clear();
+                });
+              },
             ),
             const SizedBox(height: 10),
             Expanded(
@@ -174,6 +183,7 @@ class _InventarioViewState extends State<InventarioView> {
                                 : const Icon(Icons.image, size: 50),
                             title: Text(nombre),
                             subtitle: Text(tipo),
+                            trailing: const Icon(Icons.edit, color: Colors.grey),
                           ),
                         ),
                       );
