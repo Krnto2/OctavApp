@@ -21,7 +21,7 @@ class _InventarioViewState extends State<InventarioView> {
   final tiposConSubtipos = {
     "Material de Agua": ["Piton", "Copla", "Manguera", "Otro"],
     "Herramienta": ["Manual", "Combustión", "Eléctrica", "Otro"],
-    "EPP": ["Máscara", "Botella", "Otro"],
+    "EPP": ["Arnes ERA", "Máscara", "Botella", "Otro"]
   };
 
   final tiposSinSubtipos = [
@@ -95,7 +95,6 @@ class _InventarioViewState extends State<InventarioView> {
     final todosLosTipos = [...tiposConSubtipos.keys, ...tiposSinSubtipos];
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Inventario")),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -182,7 +181,11 @@ class _InventarioViewState extends State<InventarioView> {
                                 ? Image.memory(base64Decode(base64Image), height: 50, width: 50, fit: BoxFit.cover)
                                 : const Icon(Icons.image, size: 50),
                             title: Text(nombre),
-                            subtitle: Text(tipo),
+                          subtitle: Text(
+                            '$tipo - ${data['ubicacion'] ?? 'Sin ubicación'}'
+                            '${(data['zona'] != null && data['zona'].toString().trim().isNotEmpty) ? ' / ${data['zona']}' : ''}',
+                          ),
+
                             trailing: const Icon(Icons.edit, color: Colors.grey),
                           ),
                         ),
@@ -198,7 +201,7 @@ class _InventarioViewState extends State<InventarioView> {
     );
   }
 
-  // El resto del código (como _abrirDialogoEditar) permanece sin cambios
+  
 
 
 

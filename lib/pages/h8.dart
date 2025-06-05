@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/universal_app_bar.dart';
 
 class H8Page extends StatelessWidget {
   const H8Page({super.key});
@@ -6,8 +7,10 @@ class H8Page extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Carro H-8')),
-      body: const Center(child: Text('Contenido del Carro H-8')),
+      appBar: const UniversalAppBar(titulo: 'Carro H-8'),
+      body: const Center(
+        child: Text('Contenido del Carro H-8'),
+      ),
     );
   }
 }

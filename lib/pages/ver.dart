@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../widgets/universal_app_bar.dart';
 
 class VerPage extends StatelessWidget {
   final String cajoneraNombre;
@@ -18,7 +19,7 @@ class VerPage extends StatelessWidget {
     final zona = cajoneraNombre[0].toUpperCase() + cajoneraNombre.substring(1).toLowerCase();
 
     return Scaffold(
-      appBar: AppBar(title: Text('Contenido: $zona')),
+      appBar: UniversalAppBar(titulo: 'Contenido: $zona'),
       body: SafeArea(
         child: StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance
@@ -32,7 +33,7 @@ class VerPage extends StatelessWidget {
             }
 
             if (snapshot.hasError) {
-              return Center(child: Text('Error: \${snapshot.error}'));
+              return Center(child: Text('Error: ${snapshot.error}'));
             }
 
             final docs = snapshot.data?.docs ?? [];

@@ -6,6 +6,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import '../widgets/universal_app_bar.dart';
 
 class AddPage extends StatefulWidget {
   const AddPage({super.key});
@@ -38,7 +39,7 @@ class _AddPageState extends State<AddPage> {
   final Map<String, List<String>> tiposConSubtipos = {
     "Material de Agua": ["Piton", "Copla", "Manguera", "Otro"],
     "Herramienta": ["Manual", "Combustión", "Eléctrica", "Otro"],
-    "EPP": ["Arnes", "Máscara", "Botella", "Otro"]
+    "EPP": ["Arnes ERA", "Máscara", "Botella", "Otro"]
   };
 
   final List<String> tiposSinSubtipos = [
@@ -71,9 +72,7 @@ class _AddPageState extends State<AddPage> {
       source: fromCamera ? ImageSource.camera : ImageSource.gallery,
       imageQuality: 75,
     );
-    if (picked != null) {
-      setState(() => _imagen = File(picked.path));
-    }
+    if (picked != null) setState(() => _imagen = File(picked.path));
   }
 
   Future<void> _pickPDF() async {
@@ -95,16 +94,14 @@ class _AddPageState extends State<AddPage> {
     if (!_formKey.currentState!.validate()) return;
 
     final codigoCBT = _codigoController.text.trim();
-final nombre = _nombreController.text.trim();
-final tipo = tipoSeleccionado;
-final subtipo = subtipoSeleccionado;
-final estado = estadoSeleccionado;
-final ubicacion = ubicacionSeleccionada;
-final zona = (ubicacionSeleccionada != 'Bodega') ? zonaEspecifica : null;
-final descripcion = _descripcionController.text.trim();
-final userEmail = FirebaseAuth.instance.currentUser?.email ?? "desconocido@cbt.cl";
-
-
+    final nombre = _nombreController.text.trim();
+    final tipo = tipoSeleccionado;
+    final subtipo = subtipoSeleccionado;
+    final estado = estadoSeleccionado;
+    final ubicacion = estado == 'Fuera de servicio' ? 'Bodega' : ubicacionSeleccionada;
+    final zona = (ubicacion != 'Bodega') ? zonaEspecifica : null;
+    final descripcion = _descripcionController.text.trim();
+    final userEmail = FirebaseAuth.instance.currentUser?.email ?? "desconocido@cbt.cl";
 
     try {
       if (codigoCBT.isNotEmpty) {
@@ -149,7 +146,7 @@ final userEmail = FirebaseAuth.instance.currentUser?.email ?? "desconocido@cbt.c
         'manual_pdf_url': manualPdfUrl,
         'imagen_base64': imagenBase64,
         'registrado_por': userEmail,
-        'creado': FieldValue.serverTimestamp(), //         'fecha_creacion': FieldValue.serverTimestamp()
+        'creado': FieldValue.serverTimestamp(),
       });
 
       if (mounted) {
@@ -161,7 +158,7 @@ final userEmail = FirebaseAuth.instance.currentUser?.email ?? "desconocido@cbt.c
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al guardar el ítem: $e')),
+          SnackBar(content: Text('Error al guardar el ítem: \$e')),
         );
       }
     }
@@ -172,7 +169,7 @@ final userEmail = FirebaseAuth.instance.currentUser?.email ?? "desconocido@cbt.c
     final bool tieneSubtipos = tipoSeleccionado != null && tiposConSubtipos.containsKey(tipoSeleccionado);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Añadir ítems')),
+      appBar: const UniversalAppBar(titulo: 'Agregar nuevo ítem'),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -181,6 +178,7 @@ final userEmail = FirebaseAuth.instance.currentUser?.email ?? "desconocido@cbt.c
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+           
                 DropdownButtonFormField<String>(
                   decoration: const InputDecoration(labelText: 'Tipo de ítem'),
                   value: tipoSeleccionado,
@@ -225,7 +223,6 @@ final userEmail = FirebaseAuth.instance.currentUser?.email ?? "desconocido@cbt.c
                   controller: _descripcionController,
                   decoration: const InputDecoration(
                     labelText: 'Descripción (opcional)',
-                    alignLabelWithHint: true,
                     border: OutlineInputBorder(),
                   ),
                   maxLength: 300,
@@ -233,26 +230,17 @@ final userEmail = FirebaseAuth.instance.currentUser?.email ?? "desconocido@cbt.c
                 ),
                 const SizedBox(height: 10),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     ElevatedButton.icon(
-                      icon: const Icon(Icons.camera_alt, color: Colors.white),
-                      label: const Text("Cámara", style: TextStyle(color: Colors.white)),
+                      icon: const Icon(Icons.camera_alt),
+                      label: const Text("Cámara"),
                       onPressed: () => _pickImage(true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromRGBO(45, 98, 243, 1),
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      ),
                     ),
-                    const SizedBox(width: 20),
                     ElevatedButton.icon(
-                      icon: const Icon(Icons.photo_library, color: Colors.white),
-                      label: const Text("Galería", style: TextStyle(color: Colors.white)),
+                      icon: const Icon(Icons.photo_library),
+                      label: const Text("Galería"),
                       onPressed: () => _pickImage(false),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromRGBO(45, 98, 243, 1),
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      ),
                     ),
                   ],
                 ),
@@ -260,14 +248,10 @@ final userEmail = FirebaseAuth.instance.currentUser?.email ?? "desconocido@cbt.c
                 Center(
                   child: ElevatedButton.icon(
                     onPressed: _pickPDF,
-                    icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
-                    label: Text(
-                      _manualPDF == null ? 'Adjuntar manual PDF' : 'PDF adjuntado',
-                      style: const TextStyle(color: Colors.white),
-                    ),
+                    icon: const Icon(Icons.picture_as_pdf),
+                    label: Text(_manualPDF == null ? 'Adjuntar manual PDF' : 'PDF adjuntado'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _manualPDF == null ? Colors.deepOrange : Colors.green,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      backgroundColor: _manualPDF == null ? const Color.fromARGB(255, 245, 163, 139) : Colors.green,
                     ),
                   ),
                 ),
@@ -276,26 +260,35 @@ final userEmail = FirebaseAuth.instance.currentUser?.email ?? "desconocido@cbt.c
                     padding: const EdgeInsets.only(top: 10),
                     child: Image.file(_imagen!, height: 150),
                   ),
+                const SizedBox(height: 10),
                 DropdownButtonFormField<String>(
                   decoration: const InputDecoration(labelText: 'Estado'),
                   value: estadoSeleccionado,
                   items: estados.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-                  onChanged: (val) => setState(() => estadoSeleccionado = val),
+                  onChanged: (val) => setState(() {
+                    estadoSeleccionado = val;
+                    if (val == 'Fuera de servicio') {
+                      ubicacionSeleccionada = 'Bodega';
+                      zonaEspecifica = null;
+                    }
+                  }),
                   validator: (val) => val == null ? 'Selecciona un estado' : null,
                 ),
                 DropdownButtonFormField<String>(
                   decoration: const InputDecoration(labelText: 'Ubicación'),
                   value: ubicacionSeleccionada,
                   items: ubicaciones.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
-                  onChanged: (val) {
-                    setState(() {
-                      ubicacionSeleccionada = val;
-                      final nuevasZonas = getZonasPorUbicacion(val);
-                      if (!nuevasZonas.contains(zonaEspecifica)) {
-                        zonaEspecifica = null;
-                      }
-                    });
-                  },
+                  onChanged: (estadoSeleccionado == 'Fuera de servicio')
+                      ? null
+                      : (val) {
+                          setState(() {
+                            ubicacionSeleccionada = val;
+                            final nuevasZonas = getZonasPorUbicacion(val);
+                            if (!nuevasZonas.contains(zonaEspecifica)) {
+                              zonaEspecifica = null;
+                            }
+                          });
+                        },
                   validator: (val) => val == null ? 'Selecciona una ubicación' : null,
                 ),
                 if (ubicacionSeleccionada != null && ubicacionSeleccionada != 'Bodega')
@@ -314,10 +307,11 @@ final userEmail = FirebaseAuth.instance.currentUser?.email ?? "desconocido@cbt.c
                 Center(
                   child: ElevatedButton.icon(
                     onPressed: _subirItem,
-                    icon: const Icon(Icons.save, color: Colors.black),
-                    label: const Text('Guardar ítem', style: TextStyle(color: Colors.black)),
+                    icon: const Icon(Icons.save),
+                    label: const Text('Guardar ítem'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 91, 233, 96),
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                     ),
                   ),

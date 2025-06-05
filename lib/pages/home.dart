@@ -5,6 +5,7 @@ import 'h8.dart';
 import 'f8.dart';
 import 'add.dart';
 import 'inventario.dart';
+import '../widgets/universal_app_bar.dart';
 
 class HomePage extends StatefulWidget {
   final Function(bool) onToggleTheme;
@@ -34,39 +35,47 @@ class _HomePageState extends State<HomePage> {
     _userEmail = FirebaseAuth.instance.currentUser?.email ?? 'usuario@cbt.cl';
   }
 
- List<Widget> get _views {
-  final views = [
-    CarrosView(email: _userEmail, isDarkMode: widget.isDarkMode),
-    const InventarioView(), // 👈 aquí se reemplaza el Center por la vista real
-  ];
+  List<Widget> get _views {
+    final views = [
+      CarrosView(email: _userEmail, isDarkMode: widget.isDarkMode),
+      const InventarioView(),
+    ];
 
-  if (widget.isAdmin) {
-    views.add(const ReportesView());
+    if (widget.isAdmin) {
+      views.add(const ReportesView());
+    }
+
+    views.add(
+      SettingsView(
+        isDarkMode: widget.isDarkMode,
+        onToggleTheme: widget.onToggleTheme,
+      ),
+    );
+
+    views.add(const Center(child: Text('Saliendo...')));
+
+    return views;
   }
 
-  views.add(
-    SettingsView(
-      isDarkMode: widget.isDarkMode,
-      onToggleTheme: widget.onToggleTheme,
-    ),
-  );
-
-  views.add(const Center(child: Text('Saliendo...')));
-
-  return views;
-}
-
- void _handleNavigation(int index) {
-  final isLogoutIndex = widget.isAdmin ? index == 4 : index == 3;
-
-  if (isLogoutIndex && widget.onLogout != null) {
-    _confirmLogout(context);
-  } else {
-    setState(() {
-      _selectedIndex = index;
-    });
+  List<String> get _titles {
+    final titles = ['Carros', 'Inventario'];
+    if (widget.isAdmin) titles.add('Añadir');
+    titles.add('Configuración');
+    titles.add('Saliendo...');
+    return titles;
   }
-}
+
+  void _handleNavigation(int index) {
+    final isLogoutIndex = widget.isAdmin ? index == 4 : index == 3;
+
+    if (isLogoutIndex && widget.onLogout != null) {
+      _confirmLogout(context);
+    } else {
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
+  }
 
   void _confirmLogout(BuildContext context) {
     showDialog(
@@ -99,6 +108,9 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: widget.isDarkMode ? const Color(0xFF121212) : null,
+      appBar: (_selectedIndex != _titles.length - 1)
+          ? UniversalAppBar(titulo: _titles[_selectedIndex])
+          : null,
       body: Row(
         children: [
           NavigationRail(
@@ -108,7 +120,7 @@ class _HomePageState extends State<HomePage> {
             leading: Column(
               children: [
                 const SizedBox(height: 24),
-                const Icon(Icons.home, size: 32),
+        
                 if (widget.isAdmin) ...[
                   const SizedBox(height: 10),
                   const Tooltip(
@@ -130,11 +142,11 @@ class _HomePageState extends State<HomePage> {
                 label: Text('Inventario'),
               ),
               if (widget.isAdmin)
-                const NavigationRailDestination(
-                  icon: Icon(Icons.bar_chart_outlined),
-                  selectedIcon: Icon(Icons.bar_chart),
-                  label: Text('Reportes'),
-                ),
+               const NavigationRailDestination(
+                icon: Icon(Icons.add_box_outlined),
+                selectedIcon: Icon(Icons.add_box),
+                label: Text('Añadir'),
+              ),
               const NavigationRailDestination(
                 icon: Icon(Icons.settings_outlined),
                 selectedIcon: Icon(Icons.settings),
@@ -148,14 +160,13 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
           const VerticalDivider(thickness: 1, width: 1),
-          Expanded(
-            child: _views[_selectedIndex],
-          ),
+          Expanded(child: _views[_selectedIndex]),
         ],
       ),
     );
   }
 }
+
 
 class CarrosView extends StatelessWidget {
   final String email;
@@ -210,14 +221,14 @@ class CarrosView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 65),
+          const SizedBox(height: 25),
           Text(
             '¡Hola, $nombre!',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
           ),
-          const SizedBox(height: 0),
+          const SizedBox(height: 15),
           Expanded(
             child: ListView.builder(
               itemCount: carros.length,
@@ -264,43 +275,52 @@ class CarrosView extends StatelessWidget {
 
 class ReportesView extends StatelessWidget {
   const ReportesView({super.key});
-
-  @override
+@override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Reportes',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+    return Scaffold(
+  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+  body: Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        const SizedBox(height: 100),
+        Icon(Icons.inventory_2, size: 80, color: Theme.of(context).colorScheme.primary),
+        const SizedBox(height: 24),
+        Text(
+          'Añadir nuevo ítem',
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'Presiona el botón para registrar un nuevo ítem en el inventario puedes ingresar detalles como nombre, tipo, ubicación y más.',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 40),
+        ElevatedButton.icon(
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AddPage()),
           ),
-          const SizedBox(height: 20),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AddPage()),
+          icon: const Icon(Icons.add, color: Colors.white),
+          label: const Text('Añadir ítem', style: TextStyle(fontSize: 18, color: Colors.white)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ),
-            icon: const Icon(Icons.add),
-            label: const Text('Añadir ítems'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-          ),
-          const SizedBox(height: 20),
-          const Expanded(
-            child: Center(
-              child: Text('Aquí aparecerán los reportes o funciones del administrador.'),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
+
 
 class SettingsView extends StatelessWidget {
   final bool isDarkMode;

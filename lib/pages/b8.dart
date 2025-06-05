@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'ver.dart';
+import '../widgets/universal_app_bar.dart';
 
 class B8Page extends StatelessWidget {
   const B8Page({super.key});
@@ -10,7 +11,7 @@ class B8Page extends StatelessWidget {
       MaterialPageRoute(
         builder: (_) => VerPage(
           cajoneraNombre: nombreZona,
-          ubicacion: "B-8", // Ubicación fija para este carro
+          ubicacion: "B-8",
         ),
       ),
     );
@@ -41,7 +42,7 @@ class B8Page extends StatelessWidget {
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(4),
-                    // color: const Color.fromARGB(255, 85, 119, 233).withOpacity(0.3), // Para debug visual
+                    // color: Colors.blue.withOpacity(0.3),
                   ),
                 ),
               ),
@@ -54,7 +55,7 @@ class B8Page extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Carro B-8')),
+      appBar: const UniversalAppBar(titulo: 'Carro B-8'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
