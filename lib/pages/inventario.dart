@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import '../widgets/inventario_filter_bar.dart';
 
 class InventarioView extends StatefulWidget {
   const InventarioView({super.key});
@@ -20,7 +21,7 @@ class _InventarioViewState extends State<InventarioView> {
   final tiposConSubtipos = {
     "Material de Agua": ["Piton", "Copla", "Manguera", "Otro"],
     "Herramienta": ["Manual", "Combustión", "Eléctrica", "Otro"],
-    "EPP": [ "Máscara", "Botella", "Otro"],
+    "EPP": ["Máscara", "Botella", "Otro"],
   };
 
   final tiposSinSubtipos = [
@@ -39,6 +40,13 @@ class _InventarioViewState extends State<InventarioView> {
   final zonasH8 = ["Cajonera 1", "Cajonera 2", "Cajonera 3", "Cajonera 4", "Cajonera 5", "Cajonera 6", "Cajonera 7", "Techo", "Cabina"];
   final zonasF8 = ["Cajonera 1", "Cajonera 2", "Techo", "Cabina", "Atrás"];
 
+  final TextEditingController _searchController = TextEditingController();
+  String? filtroUbicacion;
+  String? filtroZona;
+  String? filtroTipo;
+  String? filtroSubtipo;
+  bool ordenarDescendente = true;
+
   File? nuevaImagen;
   File? nuevoPDF;
 
@@ -49,6 +57,26 @@ class _InventarioViewState extends State<InventarioView> {
       case "F-8": return zonasF8;
       default: return [];
     }
+  }
+
+  Stream<QuerySnapshot> _buildFilteredStream() {
+    Query query = FirebaseFirestore.instance.collection('items');
+
+    if (filtroUbicacion?.trim().isNotEmpty ?? false) {
+      query = query.where('ubicacion', isEqualTo: filtroUbicacion);
+    }
+    if (filtroZona?.trim().isNotEmpty ?? false) {
+      query = query.where('zona', isEqualTo: filtroZona);
+    }
+    if (filtroTipo?.trim().isNotEmpty ?? false) {
+      query = query.where('tipo', isEqualTo: filtroTipo);
+    }
+    if (filtroSubtipo?.trim().isNotEmpty ?? false) {
+      query = query.where('subtipo', isEqualTo: filtroSubtipo);
+    }
+
+    query = query.orderBy('creado', descending: ordenarDescendente);
+    return query.snapshots();
   }
 
   Future<void> _pickImage(bool fromCamera, Function callback) async {
@@ -64,59 +92,105 @@ class _InventarioViewState extends State<InventarioView> {
 
   @override
   Widget build(BuildContext context) {
+    final todosLosTipos = [...tiposConSubtipos.keys, ...tiposSinSubtipos];
+
     return Scaffold(
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('items').snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-          if (snapshot.hasError) return Center(child: Text('Error: \${snapshot.error}'));
+      appBar: AppBar(title: const Text("Inventario")),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            InventarioFilterBar(
+              ubicaciones: ubicacionesDisponibles,
+              tipos: todosLosTipos,
+              tiposConSubtipos: tiposConSubtipos,
+              filtroUbicacion: filtroUbicacion,
+              filtroZona: filtroZona,
+              filtroTipo: filtroTipo,
+              filtroSubtipo: filtroSubtipo,
+              ordenarDescendente: ordenarDescendente,
+              onUbicacionChanged: (val) {
+                setState(() {
+                  filtroUbicacion = val;
+                  filtroZona = null;
+                });
+              },
+              onZonaChanged: (val) => setState(() => filtroZona = val),
+              onTipoChanged: (val) {
+                setState(() {
+                  filtroTipo = val;
+                  filtroSubtipo = null;
+                });
+              },
+              onSubtipoChanged: (val) => setState(() => filtroSubtipo = val),
+              onOrdenarChanged: (val) => setState(() => ordenarDescendente = val),
+              onBusquedaChanged: (_) => setState(() {}),
+              controller: _searchController,
+              getZonasPorUbicacion: getZonasPorUbicacion,
+            ),
+            const SizedBox(height: 10),
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: _buildFilteredStream(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-          final items = snapshot.data?.docs ?? [];
-          if (items.isEmpty) return const Center(child: Text('No hay ítems registrados.'));
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Error: \${snapshot.error}'));
+                  }
 
-          return Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: ListView.builder(
-              itemCount: items.length,
-              itemBuilder: (_, index) {
-                final data = items[index].data() as Map<String, dynamic>;
-                final docId = items[index].id;
-                final nombre = data['nombre'] ?? 'Sin nombre';
-                final tipo = data['tipo'] ?? 'Tipo desconocido';
-                final base64Image = data['imagen_base64'];
+                  final busqueda = _searchController.text.trim().toLowerCase();
 
-                return GestureDetector(
-                  onTap: () => _abrirDialogoEditar(context, data, docId),
-                  child: Card(
-                    elevation: 4,
-                    margin: const EdgeInsets.only(bottom: 20),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    child: Row(
-                      children: [
-                        ClipRRect(
-                          borderRadius: const BorderRadius.horizontal(left: Radius.circular(12)),
-                          child: base64Image != null
-                              ? Image.memory(base64Decode(base64Image), height: 100, width: 100, fit: BoxFit.cover)
-                              : Container(color: Colors.grey[300], height: 100, width: 100, child: const Icon(Icons.image, size: 40)),
-                        ),
-                        Expanded(
+                  final items = snapshot.data!.docs.where((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    final nombre = data['nombre']?.toString().toLowerCase() ?? '';
+                    final codigo = data['codigo_cbt']?.toString().toLowerCase() ?? '';
+                    if (busqueda.isEmpty) return true;
+                    return nombre.contains(busqueda) || codigo.contains(busqueda);
+                  }).toList();
+
+                  if (items.isEmpty) {
+                    return const Center(child: Text('No se encontraron ítems.'));
+                  }
+
+                  return ListView.builder(
+                    itemCount: items.length,
+                    itemBuilder: (_, index) {
+                      final data = items[index].data() as Map<String, dynamic>;
+                      final docId = items[index].id;
+                      final nombre = data['nombre'] ?? 'Sin nombre';
+                      final tipo = data['tipo'] ?? 'Tipo desconocido';
+                      final base64Image = data['imagen_base64'];
+
+                      return GestureDetector(
+                        onTap: () => _abrirDialogoEditar(context, data, docId),
+                        child: Card(
+                          margin: const EdgeInsets.only(bottom: 12),
                           child: ListTile(
+                            leading: base64Image != null
+                                ? Image.memory(base64Decode(base64Image), height: 50, width: 50, fit: BoxFit.cover)
+                                : const Icon(Icons.image, size: 50),
                             title: Text(nombre),
                             subtitle: Text(tipo),
-                            trailing: const Icon(Icons.edit),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                );
-              },
+                      );
+                    },
+                  );
+                },
+              ),
             ),
-          );
-        },
+          ],
+        ),
       ),
     );
   }
+
+  // El resto del código (como _abrirDialogoEditar) permanece sin cambios
+
+
 
   void _abrirDialogoEditar(BuildContext context, Map<String, dynamic> data, String docId) {
     final nombreCtrl = TextEditingController(text: data['nombre']);
@@ -279,16 +353,16 @@ class _InventarioViewState extends State<InventarioView> {
                         );
                         return;
                       }
-                      if (estado != 'Fuera de servicio' && ubicacion != 'Bodega' && (zona?.isEmpty ?? true || !getZonasPorUbicacion(ubicacion).contains(zona))) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Selecciona una zona válida del carro'),
-                            backgroundColor: Colors.red,
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                        return;
-                      }
+                     if (estado != 'Fuera de servicio' && ubicacion != 'Bodega' && (zona?.isEmpty ?? true)) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Selecciona una zona válida del carro'),
+                              backgroundColor: Colors.red,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                          return; // ← evita que continúe si hay error
+                        }
 
                       final duplicado = await FirebaseFirestore.instance
                           .collection('items')
@@ -297,6 +371,7 @@ class _InventarioViewState extends State<InventarioView> {
                           .get();
 
                       if (duplicado.docs.isNotEmpty && duplicado.docs.first.id != docId) {
+                        // ignore: use_build_context_synchronously
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('Ya existe un ítem con ese código CBT'),

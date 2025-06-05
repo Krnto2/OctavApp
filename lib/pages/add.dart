@@ -94,15 +94,16 @@ class _AddPageState extends State<AddPage> {
   Future<void> _subirItem() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final codigoCBT = _codigoController.text.trim().toUpperCase();
-    final nombre = _nombreController.text.trim().toUpperCase();
-    final tipo = tipoSeleccionado?.toUpperCase();
-    final subtipo = subtipoSeleccionado?.toUpperCase();
-    final estado = estadoSeleccionado?.toUpperCase();
-    final ubicacion = ubicacionSeleccionada?.toUpperCase();
-    final zona = (ubicacionSeleccionada != 'Bodega') ? zonaEspecifica?.toUpperCase() : null;
-    final descripcion = _descripcionController.text.trim(); // No convertir a mayúsculas
+    final codigoCBT = _codigoController.text.trim().toUpperCase(); // <- este sí conviene en mayúsculas
+    final nombre = _nombreController.text.trim().toUpperCase();   // <- también recomendado en mayúsculas
+    final tipo = tipoSeleccionado;                                // se guarda tal como lo selecciona el usuario
+    final subtipo = subtipoSeleccionado;                          // sin toUpperCase()
+    final estado = estadoSeleccionado;                            // sin toUpperCase()
+    final ubicacion = ubicacionSeleccionada;                      // sin toUpperCase()
+    final zona = (ubicacionSeleccionada != 'Bodega') ? zonaEspecifica : null; // sin toUpperCase()
+    final descripcion = _descripcionController.text.trim();       // ya correcto
     final userEmail = FirebaseAuth.instance.currentUser?.email ?? "desconocido@cbt.cl";
+
 
     try {
       if (codigoCBT.isNotEmpty) {
@@ -147,7 +148,7 @@ class _AddPageState extends State<AddPage> {
         'manual_pdf_url': manualPdfUrl,
         'imagen_base64': imagenBase64,
         'registrado_por': userEmail,
-        'creado': FieldValue.serverTimestamp(),
+        'creado': FieldValue.serverTimestamp(), //         'fecha_creacion': FieldValue.serverTimestamp()
       });
 
       if (mounted) {
