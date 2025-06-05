@@ -54,7 +54,7 @@ class _RegisterPageState extends State<RegisterPage> {
           'rol': esAdmin ? 'admin' : 'bombero',
         });
       } catch (_) {
-        // si firestore falla, igual seguimos
+        
       }
 
       if (!mounted) return;

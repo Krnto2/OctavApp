@@ -14,7 +14,7 @@
         android:required="false"/> <!-- Android 13 -->
 
     <application
-        android:label="octavapp"
+        android:label="OctavApp"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 
