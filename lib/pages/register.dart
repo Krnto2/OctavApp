@@ -16,10 +16,12 @@ class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
 
-  bool esCorreoValido(String correo) {
-    final regex = RegExp(r'^.+\..+\.8@cbt\.cl$');
-    return regex.hasMatch(correo);
-  }
+  
+bool esCorreoValido(String correo) {
+  final regex = RegExp(r'8@cbt\.cl$');
+  return regex.hasMatch(correo);
+}
+
 
   Future<void> _registrar() async {
     if (!_formKey.currentState!.validate()) return;
@@ -27,11 +29,14 @@ class _RegisterPageState extends State<RegisterPage> {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
-    final excepcionesAdmin = ['capitan8@cbt.cl', 'director8@cbt.cl'];
-    final esAdmin = excepcionesAdmin.contains(email);
-    final esValido = esAdmin || esCorreoValido(email);
+    final superadmins = ['capitan8@cbt.cl', 'director8@cbt.cl'];
 
-    if (!esValido) {
+    String? rol;
+    if (superadmins.contains(email)) {
+      rol = 'superadmin';
+    } else if (esCorreoValido(email)) {
+      rol = 'bombero';
+    } else {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Correo no válido para registro")),
@@ -51,11 +56,9 @@ class _RegisterPageState extends State<RegisterPage> {
             .doc(credenciales.user!.uid)
             .set({
           'email': email,
-          'rol': esAdmin ? 'admin' : 'bombero',
+          'rol': rol,
         });
-      } catch (_) {
-        
-      }
+      } catch (_) {}
 
       if (!mounted) return;
       showDialog(
@@ -91,7 +94,7 @@ class _RegisterPageState extends State<RegisterPage> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error inesperado: ${e.toString()}")),
+        SnackBar(content: Text("Error inesperado: \${e.toString()}")),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_app_check/firebase_app_check.dart'; // 🔹 AÑADIDO
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'pages/home.dart';
@@ -11,7 +11,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
 
-  // 🔐 ACTIVAR App Check en modo debug (soluciona el error de reCAPTCHA vacío)
+  // Activar App Check en modo debug
   await FirebaseAppCheck.instance.activate(
     androidProvider: AndroidProvider.debug,
     appleProvider: AppleProvider.debug,
@@ -19,19 +19,19 @@ void main() async {
 
   final prefs = await SharedPreferences.getInstance();
   final logueado = prefs.getBool('logueado') ?? false;
-  final isAdmin = prefs.getBool('esAdmin') ?? false;
+  final isAdmin = prefs.getBool('esAdmin') ?? false; // ✔ Agregado
 
   runApp(InventarioApp(logueado: logueado, isAdmin: isAdmin));
 }
 
 class InventarioApp extends StatefulWidget {
   final bool logueado;
-  final bool isAdmin;
+  final bool isAdmin; // ✔ Agregado
 
   const InventarioApp({
     super.key,
     required this.logueado,
-    required this.isAdmin,
+    required this.isAdmin, // ✔ Agregado
   });
 
   @override
@@ -62,14 +62,10 @@ class _InventarioAppState extends State<InventarioApp> {
       initialRoute: widget.logueado ? '/home' : '/login',
       onGenerateRoute: (settings) {
         if (settings.name == '/home') {
-          final args = settings.arguments as Map<String, dynamic>? ?? {};
-          final isAdmin = args['isAdmin'] ?? widget.isAdmin;
-
           return MaterialPageRoute(
             builder: (_) => HomePage(
               isDarkMode: _isDarkMode,
               onToggleTheme: _toggleTheme,
-              isAdmin: isAdmin,
               onLogout: _handleLogout,
             ),
           );

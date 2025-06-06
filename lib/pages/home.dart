@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'b8.dart';
 import 'h8.dart';
 import 'f8.dart';
 import 'add.dart';
 import 'inventario.dart';
+import 'usuario.dart';
 import '../widgets/universal_app_bar.dart';
 
 class HomePage extends StatefulWidget {
   final Function(bool) onToggleTheme;
   final bool isDarkMode;
-  final bool isAdmin;
   final void Function(BuildContext)? onLogout;
 
   const HomePage({
     super.key,
     required this.onToggleTheme,
     required this.isDarkMode,
-    required this.isAdmin,
     this.onLogout,
   });
 
@@ -28,11 +28,28 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   late String _userEmail;
+  String? _rolUsuario;
+
+  bool get isAdmin => _rolUsuario == 'admin' || _rolUsuario == 'superadmin';
+  bool get isSuperAdmin => _rolUsuario == 'superadmin';
 
   @override
   void initState() {
     super.initState();
     _userEmail = FirebaseAuth.instance.currentUser?.email ?? 'usuario@cbt.cl';
+    _obtenerRol();
+  }
+
+  void _obtenerRol() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final doc = await FirebaseFirestore.instance.collection('usuarios').doc(user.uid).get();
+      if (doc.exists) {
+        setState(() {
+          _rolUsuario = doc['rol'];
+        });
+      }
+    }
   }
 
   List<Widget> get _views {
@@ -41,33 +58,32 @@ class _HomePageState extends State<HomePage> {
       const InventarioView(),
     ];
 
-    if (widget.isAdmin) {
+    if (isAdmin) {
       views.add(const ReportesView());
     }
+    if (isSuperAdmin) {
+      views.add(const UsuarioView());
+    }
 
-    views.add(
-      SettingsView(
-        isDarkMode: widget.isDarkMode,
-        onToggleTheme: widget.onToggleTheme,
-      ),
-    );
-
+    views.add(SettingsView(
+      isDarkMode: widget.isDarkMode,
+      onToggleTheme: widget.onToggleTheme,
+    ));
     views.add(const Center(child: Text('Saliendo...')));
-
     return views;
   }
 
   List<String> get _titles {
     final titles = ['Carros', 'Inventario'];
-    if (widget.isAdmin) titles.add('Añadir');
+    if (isAdmin) titles.add('Añadir');
+    if (isSuperAdmin) titles.add('Usuarios');
     titles.add('Configuración');
     titles.add('Saliendo...');
     return titles;
   }
 
   void _handleNavigation(int index) {
-    final isLogoutIndex = widget.isAdmin ? index == 4 : index == 3;
-
+    final isLogoutIndex = index == _titles.length - 1;
     if (isLogoutIndex && widget.onLogout != null) {
       _confirmLogout(context);
     } else {
@@ -84,10 +100,7 @@ class _HomePageState extends State<HomePage> {
         title: const Text('¿Cerrar sesión?'),
         content: const Text('¿Estás seguro de que deseas cerrar sesión?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
           ElevatedButton.icon(
             onPressed: () {
               Navigator.pop(context);
@@ -98,7 +111,7 @@ class _HomePageState extends State<HomePage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color.fromARGB(255, 238, 138, 130),
             ),
-          ),
+          )
         ],
       ),
     );
@@ -106,6 +119,13 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_rolUsuario == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+
     return Scaffold(
       backgroundColor: widget.isDarkMode ? const Color(0xFF121212) : null,
       appBar: (_selectedIndex != _titles.length - 1)
@@ -120,8 +140,7 @@ class _HomePageState extends State<HomePage> {
             leading: Column(
               children: [
                 const SizedBox(height: 24),
-        
-                if (widget.isAdmin) ...[
+                if (isAdmin || isSuperAdmin) ...[
                   const SizedBox(height: 10),
                   const Tooltip(
                     message: 'Modo Administrador',
@@ -141,12 +160,18 @@ class _HomePageState extends State<HomePage> {
                 selectedIcon: Icon(Icons.inventory),
                 label: Text('Inventario'),
               ),
-              if (widget.isAdmin)
-               const NavigationRailDestination(
-                icon: Icon(Icons.add_box_outlined),
-                selectedIcon: Icon(Icons.add_box),
-                label: Text('Añadir'),
-              ),
+              if (isAdmin)
+                const NavigationRailDestination(
+                  icon: Icon(Icons.add_box_outlined),
+                  selectedIcon: Icon(Icons.add_box),
+                  label: Text('Añadir'),
+                ),
+              if (isSuperAdmin)
+                const NavigationRailDestination(
+                  icon: Icon(Icons.group_outlined),
+                  selectedIcon: Icon(Icons.group),
+                  label: Text('Usuarios'),
+                ),
               const NavigationRailDestination(
                 icon: Icon(Icons.settings_outlined),
                 selectedIcon: Icon(Icons.settings),
