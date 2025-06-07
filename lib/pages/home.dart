@@ -7,6 +7,7 @@ import 'f8.dart';
 import 'add.dart';
 import 'inventario.dart';
 import 'usuario.dart';
+import 'alert.dart'; 
 import '../widgets/universal_app_bar.dart';
 
 class HomePage extends StatefulWidget {
@@ -56,14 +57,11 @@ class _HomePageState extends State<HomePage> {
     final views = [
       CarrosView(email: _userEmail, isDarkMode: widget.isDarkMode),
       const InventarioView(),
+      const AlertView(),
     ];
 
-    if (isAdmin) {
-      views.add(const ReportesView());
-    }
-    if (isSuperAdmin) {
-      views.add(const UsuarioView());
-    }
+    if (isAdmin) views.add(const ReportesView());
+    if (isSuperAdmin) views.add(const UsuarioView());
 
     views.add(SettingsView(
       isDarkMode: widget.isDarkMode,
@@ -74,7 +72,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   List<String> get _titles {
-    final titles = ['Carros', 'Inventario'];
+    final titles = ['Carros', 'Inventario', 'Anuncios'];
     if (isAdmin) titles.add('Añadir');
     if (isSuperAdmin) titles.add('Usuarios');
     titles.add('Configuración');
@@ -125,7 +123,6 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-
     return Scaffold(
       backgroundColor: widget.isDarkMode ? const Color(0xFF121212) : null,
       appBar: (_selectedIndex != _titles.length - 1)
@@ -159,6 +156,11 @@ class _HomePageState extends State<HomePage> {
                 icon: Icon(Icons.inventory_2_outlined),
                 selectedIcon: Icon(Icons.inventory),
                 label: Text('Inventario'),
+              ),
+              const NavigationRailDestination(
+                icon: Icon(Icons.notifications_none),
+                selectedIcon: Icon(Icons.notifications),
+                label: Text('Anuncios'),
               ),
               if (isAdmin)
                 const NavigationRailDestination(
