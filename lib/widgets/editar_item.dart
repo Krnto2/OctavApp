@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:convert';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -234,11 +236,12 @@ class _EditarItemWidgetState extends State<EditarItemWidget> {
               onPressed: () async {
                 final codigoCBT = cbtCtrl.text.trim().toUpperCase();
                 final nombre = nombreCtrl.text.trim().toUpperCase();
+                final messenger = ScaffoldMessenger.of(context);
 
                 if (nombre.isEmpty || tipoFinal == null || estado == null || ubicacion == null ||
                     (widget.tiposConSub.containsKey(tipoFinal) && (subtipoFinal?.isEmpty ?? true)) ||
                     (estado != 'Fuera de servicio' && ubicacion != 'Bodega' && (zona?.isEmpty ?? true))) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  messenger.showSnackBar(
                     const SnackBar(content: Text('Completa los campos obligatorios'), backgroundColor: Colors.red),
                   );
                   return;
@@ -251,13 +254,12 @@ class _EditarItemWidgetState extends State<EditarItemWidget> {
                     .get();
 
                 if (duplicado.docs.isNotEmpty && duplicado.docs.first.id != widget.docId) {
-                      if (!mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Ya existe un ítem con ese código CBT'), backgroundColor: Colors.red),
-                      );
-                      return;
-                    }
-
+                  if (!mounted) return;
+                  messenger.showSnackBar(
+                    const SnackBar(content: Text('Ya existe un ítem con ese código CBT'), backgroundColor: Colors.red),
+                  );
+                  return;
+                }
 
                 final updates = {
                   'nombre': nombre,
@@ -279,9 +281,9 @@ class _EditarItemWidgetState extends State<EditarItemWidget> {
                   await ref.putFile(nuevoPDF!);
                   updates['manual_pdf_url'] = await ref.getDownloadURL();
                 }
-
+                
                 await FirebaseFirestore.instance.collection('items').doc(widget.docId).update(updates);
-                if (context.mounted) Navigator.pop(context);
+                if (mounted) Navigator.pop(context);
               },
               child: const Text('Guardar'),
             ),

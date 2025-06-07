@@ -359,15 +359,36 @@ class SettingsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: SwitchListTile(
-        title: const Text('Modo oscuro'),
-        value: isDarkMode,
-        onChanged: (bool value) {
-          onToggleTheme(value);
-        },
-        secondary: const Icon(Icons.dark_mode),
-      ),
+    return Column(
+      children: [
+        Expanded(
+          child: Center(
+            child: SwitchListTile(
+              title: const Text('Modo oscuro'),
+              value: isDarkMode,
+              onChanged: (bool value) {
+                onToggleTheme(value);
+              },
+              secondary: const Icon(Icons.dark_mode),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Opacity(
+            opacity: 0.4,
+            child: Text(
+              '© 2025 Renato Pomeri · Todos los derechos reservados',
+              style: TextStyle(
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+                color: Theme.of(context).textTheme.bodySmall?.color,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
