@@ -11,11 +11,11 @@ import 'package:image_picker/image_picker.dart';
 extension Normalize on String {
   String normalize() {
     return toLowerCase()
-        .replaceAll(RegExp(r'[áÁ]'), 'a')
-        .replaceAll(RegExp(r'[éÉ]'), 'e')
-        .replaceAll(RegExp(r'[íÍ]'), 'i')
-        .replaceAll(RegExp(r'[óÓ]'), 'o')
-        .replaceAll(RegExp(r'[úÚ]'), 'u')
+        .replaceAll(RegExp(r'[\u00C0-\u00C5]'), 'a')
+        .replaceAll(RegExp(r'[\u00C8-\u00CB]'), 'e')
+        .replaceAll(RegExp(r'[\u00CC-\u00CF]'), 'i')
+        .replaceAll(RegExp(r'[\u00D2-\u00D6]'), 'o')
+        .replaceAll(RegExp(r'[\u00D9-\u00DC]'), 'u')
         .trim();
   }
 }
@@ -104,6 +104,37 @@ class _EditarItemWidgetState extends State<EditarItemWidget> {
     );
     zona = zona!.isEmpty ? null : zona;
   }
+
+  Future<void> _confirmarEliminacion() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar eliminación'),
+        content: const Text(
+          '¿Estás seguro de que deseas eliminar este ítem del inventario? Esta acción no se puede deshacer.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await FirebaseFirestore.instance.collection('items').doc(widget.docId).delete();
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ítem eliminado correctamente'), backgroundColor: Colors.green),
+      );
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -224,6 +255,20 @@ class _EditarItemWidgetState extends State<EditarItemWidget> {
       ),
       actionsAlignment: MainAxisAlignment.center,
       actions: [
+  if (ubicacion == 'Bodega')
+  Center(
+    child: ElevatedButton(
+      onPressed: _confirmarEliminacion,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.red,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      ),
+      child: const Text('Eliminar ítem'),
+    ),
+  ),
+
+
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
