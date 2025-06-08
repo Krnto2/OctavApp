@@ -31,6 +31,7 @@ class _AddAnuncioDialogState extends State<AddAnuncioDialog> {
 
   Future<void> _crearAnuncio() async {
     if (_tituloController.text.trim().isEmpty || _descripcionController.text.trim().isEmpty) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Título y descripción son obligatorios')),
       );
@@ -59,6 +60,8 @@ class _AddAnuncioDialogState extends State<AddAnuncioDialog> {
       'vistoPor': [],
     });
 
+    if (!mounted) return;
+
     setState(() {
       _tituloController.clear();
       _descripcionController.clear();
@@ -66,22 +69,19 @@ class _AddAnuncioDialogState extends State<AddAnuncioDialog> {
       _subiendo = false;
     });
 
-    if (mounted) {
-      Navigator.of(context).pop();
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('Éxito'),
-          content: const Text('El anuncio fue publicado correctamente.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Aceptar'),
-            ),
-          ],
-        ),
-      );
-    }
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Éxito'),
+        content: const Text('El anuncio fue publicado correctamente.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Aceptar'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

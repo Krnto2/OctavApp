@@ -53,6 +53,18 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Stream<int> contarAnunciosNoVistos(String emailUsuario) {
+    return FirebaseFirestore.instance
+        .collection('anuncios')
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs.where((doc) {
+            final List vistos = doc['vistoPor'] ?? [];
+            return !vistos.contains(emailUsuario);
+          }).length;
+        });
+  }
+
   List<Widget> get _views {
     final views = [
       CarrosView(email: _userEmail, isDarkMode: widget.isDarkMode),
@@ -115,84 +127,118 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (_rolUsuario == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
 
-    return Scaffold(
-      backgroundColor: widget.isDarkMode ? const Color(0xFF121212) : null,
-      appBar: (_selectedIndex != _titles.length - 1)
-          ? UniversalAppBar(titulo: _titles[_selectedIndex])
-          : null,
-      body: Row(
-        children: [
-          NavigationRail(
-            selectedIndex: _selectedIndex,
-            onDestinationSelected: _handleNavigation,
-            labelType: NavigationRailLabelType.selected,
-            leading: Column(
-              children: [
-                const SizedBox(height: 24),
-                if (isAdmin || isSuperAdmin) ...[
-                  const SizedBox(height: 10),
-                  const Tooltip(
-                    message: 'Modo Administrador',
-                    child: Icon(Icons.security, color: Colors.red, size: 30),
-                  ),
-                ],
-              ],
-            ),
-            destinations: [
-              const NavigationRailDestination(
-                icon: Icon(Icons.fire_truck_outlined),
-                selectedIcon: Icon(Icons.fire_truck),
-                label: Text('Carros'),
-              ),
-              const NavigationRailDestination(
-                icon: Icon(Icons.inventory_2_outlined),
-                selectedIcon: Icon(Icons.inventory),
-                label: Text('Inventario'),
-              ),
-              const NavigationRailDestination(
-                icon: Icon(Icons.notifications_none),
-                selectedIcon: Icon(Icons.notifications),
-                label: Text('Anuncios'),
-              ),
-              if (isAdmin)
-                const NavigationRailDestination(
-                  icon: Icon(Icons.add_box_outlined),
-                  selectedIcon: Icon(Icons.add_box),
-                  label: Text('Añadir'),
-                ),
-              if (isSuperAdmin)
-                const NavigationRailDestination(
-                  icon: Icon(Icons.group_outlined),
-                  selectedIcon: Icon(Icons.group),
-                  label: Text('Usuarios'),
-                ),
-              const NavigationRailDestination(
-                icon: Icon(Icons.settings_outlined),
-                selectedIcon: Icon(Icons.settings),
-                label: Text('Config.'),
-              ),
-              const NavigationRailDestination(
-                icon: Icon(Icons.logout),
-                selectedIcon: Icon(Icons.logout),
-                label: Text('Salir'),
-              ),
-            ],
-          ),
-          const VerticalDivider(thickness: 1, width: 1),
-          Expanded(child: _views[_selectedIndex]),
-        ],
-      ),
+  @override
+Widget build(BuildContext context) {
+  if (_rolUsuario == null) {
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
     );
   }
-}
+
+  return Scaffold(
+    backgroundColor: widget.isDarkMode ? const Color(0xFF121212) : null,
+    appBar: (_selectedIndex != _titles.length - 1)
+        ? UniversalAppBar(titulo: _titles[_selectedIndex])
+        : null,
+    body: Row(
+      children: [
+        NavigationRail(
+          selectedIndex: _selectedIndex,
+          onDestinationSelected: _handleNavigation,
+          labelType: NavigationRailLabelType.selected,
+          leading: Column(
+            children: [
+              const SizedBox(height: 24),
+              if (isAdmin || isSuperAdmin) ...[
+                const SizedBox(height: 10),
+                const Tooltip(
+                  message: 'Modo Administrador',
+                  child: Icon(Icons.security, color: Colors.red, size: 30),
+                ),
+              ],
+            ],
+          ),
+          destinations: [
+            const NavigationRailDestination(
+              icon: Icon(Icons.fire_truck_outlined),
+              selectedIcon: Icon(Icons.fire_truck),
+              label: Text('Carros'),
+            ),
+            const NavigationRailDestination(
+              icon: Icon(Icons.inventory_2_outlined),
+              selectedIcon: Icon(Icons.inventory),
+              label: Text('Inventario'),
+            ),
+            NavigationRailDestination(
+              icon: StreamBuilder<int>(
+                stream: contarAnunciosNoVistos(_userEmail),
+                builder: (context, snapshot) {
+                  final cantidad = snapshot.data ?? 0;
+                  return Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      const Icon(Icons.notifications_none),
+                      if (cantidad > 0)
+                        Positioned(
+                          right: -6,
+                          top: -6,
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: const BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                            constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                            child: Text(
+                              cantidad > 9 ? '9+' : '$cantidad',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
+              selectedIcon: const Icon(Icons.notifications),
+              label: const Text('Anuncios'),
+            ),
+            if (isAdmin)
+              const NavigationRailDestination(
+                icon: Icon(Icons.add_box_outlined),
+                selectedIcon: Icon(Icons.add_box),
+                label: Text('Añadir'),
+              ),
+            if (isSuperAdmin)
+              const NavigationRailDestination(
+                icon: Icon(Icons.group_outlined),
+                selectedIcon: Icon(Icons.group),
+                label: Text('Usuarios'),
+              ),
+            const NavigationRailDestination(
+              icon: Icon(Icons.settings_outlined),
+              selectedIcon: Icon(Icons.settings),
+              label: Text('Config.'),
+            ),
+            const NavigationRailDestination(
+              icon: Icon(Icons.logout),
+              selectedIcon: Icon(Icons.logout),
+              label: Text('Salir'),
+            ),
+          ],
+        ),
+        const VerticalDivider(thickness: 1, width: 1),
+        Expanded(child: _views[_selectedIndex]),
+      ],
+    ),
+  );
+}}
+
 
 
 class CarrosView extends StatelessWidget {
