@@ -57,7 +57,7 @@ class _HomePageState extends State<HomePage> {
     final views = [
       CarrosView(email: _userEmail, isDarkMode: widget.isDarkMode),
       const InventarioView(),
-      const AlertView(),
+      AlertView(isAdmin: isAdmin),
     ];
 
     if (isAdmin) views.add(const ReportesView());
