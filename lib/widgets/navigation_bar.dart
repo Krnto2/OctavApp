@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CustomNavigationBar extends StatelessWidget {
   final int selectedIndex;
@@ -6,7 +7,6 @@ class CustomNavigationBar extends StatelessWidget {
   final bool isSuperAdmin;
   final String userEmail;
   final void Function(int) onSelect;
-  final Stream<int> Function(String) contarAnunciosNoVistos;
 
   const CustomNavigationBar({
     super.key,
@@ -15,8 +15,23 @@ class CustomNavigationBar extends StatelessWidget {
     required this.isSuperAdmin,
     required this.userEmail,
     required this.onSelect,
-    required this.contarAnunciosNoVistos,
   });
+
+  // ✅ Función para contar los anuncios no vistos
+  Stream<int> contarAnunciosNoVistos(String userEmail) {
+    return FirebaseFirestore.instance.collection('anuncios').snapshots().map((snapshot) {
+      int count = 0;
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        final List<dynamic>? vistos = data['vistoPor'];
+
+        if (vistos == null || !vistos.contains(userEmail)) {
+          count++;
+        }
+      }
+      return count;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,6 +62,7 @@ class CustomNavigationBar extends StatelessWidget {
           selectedIcon: Icon(Icons.inventory),
           label: Text('Inventario'),
         ),
+        // 🔴 Ícono con contador de anuncios pendientes
         NavigationRailDestination(
           icon: StreamBuilder<int>(
             stream: contarAnunciosNoVistos(userEmail),
