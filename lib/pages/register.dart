@@ -26,7 +26,7 @@ bool esCorreoValido(String correo) {
   Future<void> _registrar() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final email = _emailController.text.trim();
+    final email = _emailController.text.trim().toLowerCase(); 
     final password = _passwordController.text.trim();
 
     final superadmins = ['capitan8@cbt.cl', 'director8@cbt.cl'];
