@@ -45,5 +45,19 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
+	<!-- Permisos iOS -->
+	<key>NSCameraUsageDescription</key>
+	<string>La aplicación necesita acceder a la cámara para tomar fotos o grabar videos.</string>
+	
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>La aplicación necesita acceder a la galería para seleccionar imágenes.</string>
+	
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>La aplicación necesita guardar fotos en tu galería.</string>
+	
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>La aplicación necesita acceder a archivos para poder subirlos o guardarlos.</string>
+
 </dict>
 </plist>
