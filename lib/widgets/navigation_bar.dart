@@ -62,7 +62,6 @@ class CustomNavigationBar extends StatelessWidget {
           selectedIcon: Icon(Icons.inventory),
           label: Text('Inventario'),
         ),
-        // 🔴 Ícono con contador de anuncios pendientes
         NavigationRailDestination(
           icon: StreamBuilder<int>(
             stream: contarAnunciosNoVistos(userEmail),

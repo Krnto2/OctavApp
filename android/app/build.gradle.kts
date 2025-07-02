@@ -2,7 +2,7 @@ plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
-    id("com.google.gms.google-services") // ✅ Este sí va aquí en Kotlin DSL
+    id("com.google.gms.google-services") // Firebase
 }
 
 android {
@@ -13,6 +13,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        // ✅ Habilita desugaring para compatibilidad con Java 8+ features
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
@@ -28,7 +30,7 @@ android {
     }
 
     buildTypes {
-        release {
+        getByName("release") {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
@@ -38,3 +40,7 @@ flutter {
     source = "../.."
 }
 
+dependencies {
+    // ✅ Agrega esta línea para evitar el error de desugaring
+   coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+}
